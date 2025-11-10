@@ -29,6 +29,35 @@ const createRoadmapSchema = z.object({
 
 const app = new Hono();
 
+app.get('/', async (c) => {
+    try {
+        const roadmaps = await prisma.roadmap.findMany({
+            include: {
+                roadmap_topics: {
+                    include: {
+                        topic: true
+                    }
+                },
+                nodes: true,
+                edges: true
+            }
+        });
+
+        return c.json({
+            success: true,
+            data: roadmaps
+        });
+    } catch {
+        return c.json(
+            {
+                success: false,
+                error: MESSAGES.internalServerError
+            },
+            500
+        );
+    }
+});
+
 app.put('/', zValidator('json', createRoadmapSchema), async (c) => {
     try {
         const { name, description, topicIds, nodes, edges } = c.req.valid('json');
@@ -124,7 +153,7 @@ app.put('/', zValidator('json', createRoadmapSchema), async (c) => {
 
         const positionToIdMap = new Map();
         for (const node of createdNodesList) {
-            const key = `${node.position_x}_${node.position_y}`;
+            const key = `${Math.round(node.position_x)}_${Math.round(node.position_y)}`;
             positionToIdMap.set(key, node.id);
         }
 
@@ -132,16 +161,39 @@ app.put('/', zValidator('json', createRoadmapSchema), async (c) => {
             await prisma.roadmapEdge.createMany({
                 data: edges
                     .map((edge) => {
-                        const sourceKey = edge.source_id;
-                        const targetKey = edge.target_id;
+                        const sourceParts = edge.source_id.split('_');
+                        const targetParts = edge.target_id.split('_');
+
+                        if (sourceParts.length !== 2 || targetParts.length !== 2) {
+                            return null;
+                        }
+
+                        const sourceX = Number.parseFloat(sourceParts[0] || '0');
+                        const sourceY = Number.parseFloat(sourceParts[1] || '0');
+                        const targetX = Number.parseFloat(targetParts[0] || '0');
+                        const targetY = Number.parseFloat(targetParts[1] || '0');
+
+                        if (Number.isNaN(sourceX) || Number.isNaN(sourceY) || Number.isNaN(targetX) || Number.isNaN(targetY)) {
+                            return null;
+                        }
+
+                        const sourceKey = `${Math.round(sourceX)}_${Math.round(sourceY)}`;
+                        const targetKey = `${Math.round(targetX)}_${Math.round(targetY)}`;
+
+                        const sourceNodeId = positionToIdMap.get(sourceKey);
+                        const targetNodeId = positionToIdMap.get(targetKey);
+
+                        if (!sourceNodeId || !targetNodeId) {
+                            return null;
+                        }
 
                         return {
                             roadmap_id: newRoadmap.id,
-                            source_id: positionToIdMap.get(sourceKey) || '',
-                            target_id: positionToIdMap.get(targetKey) || ''
+                            source_id: sourceNodeId,
+                            target_id: targetNodeId
                         };
                     })
-                    .filter((edge) => edge.source_id && edge.target_id)
+                    .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
             });
         }
 
