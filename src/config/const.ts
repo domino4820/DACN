@@ -1,0 +1,8 @@
+const CONST = {
+    USERNAME_MIN_LENGTH: 3,
+    USERNAME_MAX_LENGTH: 16,
+    PASSWORD_MIN_LENGTH: 6,
+    PASSWORD_MAX_LENGTH: 16,
+    OTP_LENGTH: 4
+};
+export default CONST;

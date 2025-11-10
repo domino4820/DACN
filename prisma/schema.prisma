@@ -1,0 +1,349 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Visibility {
+  PUBLIC
+  GROUP_ONLY
+}
+
+enum GroupMemberRole {
+  OWNER
+  MODERATOR
+  MEMBER
+}
+
+enum QuizStatus {
+  PENDING
+  APPROVED
+}
+
+enum NodeLevel {
+  REQUIRED
+  OPTIONAL
+}
+
+model User {
+  username    String   @id
+  email       String   @unique
+  password    String
+  is_banned   Boolean  @default(false)
+  is_verified Boolean  @default(false)
+  otp         String?
+  created_at  DateTime @default(now()) @db.Timestamptz
+
+  profile               UserProfile?
+  stats                 UserStats?
+  paths                 UserPath[]
+  completed_nodes       UserNodeCompletion[]
+  group_memberships     GroupMember[]
+  group_messages        GroupMessage[]
+  group_message_replies GroupMessageReply[]
+  created_quizzes       Quiz[]               @relation("QuizCreator")
+  quiz_answers          QuizAnswer[]
+  user_posts            UserPost[]
+  user_post_likes       UserPostLike[]
+  user_post_comments    UserPostComment[]
+
+  @@index([created_at(sort: Desc)])
+  @@map("user")
+}
+
+model UserProfile {
+  username   String     @id
+  name       String?
+  avatar_url String?
+  bio        String?
+  visibility Visibility @default(PUBLIC)
+  facebook   String?
+  github     String?
+
+  user User @relation(fields: [username], references: [username], onDelete: Cascade)
+
+  @@map("user_profile")
+}
+
+model UserStats {
+  username String @id
+  level    Int    @default(1)
+  xp       Int    @default(0)
+
+  user User @relation(fields: [username], references: [username], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+model UserPath {
+  user_id         String
+  roadmap_id      String
+  current_node_id String?
+
+  user    User    @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  roadmap Roadmap @relation(fields: [roadmap_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, roadmap_id])
+  @@map("user_path")
+}
+
+model UserNodeCompletion {
+  user_id      String
+  node_id      String
+  completed_at DateTime @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [user_id], references: [username], onDelete: Cascade)
+
+  @@id([user_id, node_id])
+  @@map("user_node_completion")
+}
+
+model UserPost {
+  id         String   @id @default(uuid())
+  user_id    String
+  content    String
+  image_url  String?
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  user     User              @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  likes    UserPostLike[]
+  comments UserPostComment[]
+
+  @@index([user_id, created_at(sort: Desc)])
+  @@map("user_post")
+}
+
+model UserPostLike {
+  post_id String
+  user_id String
+
+  post UserPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [user_id], references: [username], onDelete: Cascade)
+
+  @@id([post_id, user_id])
+  @@index([user_id])
+  @@map("user_post_like")
+}
+
+model UserPostComment {
+  id         String   @id @default(uuid())
+  post_id    String
+  user_id    String
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  post UserPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [user_id], references: [username], onDelete: Cascade)
+
+  @@index([post_id, created_at(sort: Desc)])
+  @@index([user_id])
+  @@map("user_post_comment")
+}
+
+model Group {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  members  GroupMember[]
+  messages GroupMessage[]
+
+  @@index([name])
+  @@map("group")
+}
+
+model GroupMember {
+  group_id  String
+  user_id   String
+  role      GroupMemberRole @default(MEMBER)
+  joined_at DateTime        @default(now()) @db.Timestamptz
+
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [username], onDelete: Cascade)
+
+  @@id([group_id, user_id])
+  @@map("group_member")
+}
+
+model GroupMessage {
+  id         String   @id @default(uuid())
+  group_id   String
+  user_id    String
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  group   Group               @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user    User                @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  replies GroupMessageReply[]
+
+  @@index([group_id, created_at(sort: Desc)])
+  @@index([user_id])
+  @@map("group_message")
+}
+
+model GroupMessageReply {
+  id         String   @id @default(uuid())
+  message_id String
+  user_id    String
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  message GroupMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [user_id], references: [username], onDelete: Cascade)
+
+  @@index([message_id, created_at(sort: Desc)])
+  @@index([user_id])
+  @@map("group_message_reply")
+}
+
+model Topic {
+  id         String   @id @default(uuid())
+  name       String   @unique
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  roadmap_topics RoadmapTopic[]
+
+  @@index([name])
+  @@map("topic")
+}
+
+model Roadmap {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  nodes          RoadmapNode[]
+  edges          RoadmapEdge[]
+  roadmap_topics RoadmapTopic[]
+  user_paths     UserPath[]
+
+  @@index([name])
+  @@map("roadmap")
+}
+
+model RoadmapTopic {
+  roadmap_id String
+  topic_id   String
+
+  roadmap Roadmap @relation(fields: [roadmap_id], references: [id], onDelete: Cascade)
+  topic   Topic   @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+
+  @@id([roadmap_id, topic_id])
+  @@map("roadmap_topic")
+}
+
+model RoadmapNode {
+  id         String  @id @default(uuid())
+  roadmap_id String
+  position_x Float
+  position_y Float
+  node_type  String  @default("default")
+  label      String
+  content    String?
+  level      NodeLevel @default(OPTIONAL)
+  data       Json?   @db.JsonB
+
+  roadmap        Roadmap       @relation(fields: [roadmap_id], references: [id], onDelete: Cascade)
+  outgoing_edges RoadmapEdge[] @relation("SourceNode")
+  incoming_edges RoadmapEdge[] @relation("TargetNode")
+
+  @@index([roadmap_id])
+  @@map("roadmap_node")
+}
+
+model RoadmapEdge {
+  id         String  @id @default(uuid())
+  roadmap_id String
+  source_id  String
+  target_id  String
+
+  roadmap     Roadmap     @relation(fields: [roadmap_id], references: [id], onDelete: Cascade)
+  source_node RoadmapNode @relation("SourceNode", fields: [source_id], references: [id], onDelete: Cascade)
+  target_node RoadmapNode @relation("TargetNode", fields: [target_id], references: [id], onDelete: Cascade)
+
+  @@unique([roadmap_id, source_id, target_id])
+  @@index([source_id])
+  @@index([target_id])
+  @@map("roadmap_edge")
+}
+
+model Quiz {
+  id          String     @id @default(uuid())
+  label       String
+  description String?
+  creator_id  String
+  status      QuizStatus @default(PENDING)
+
+  creator   User           @relation("QuizCreator", fields: [creator_id], references: [username], onDelete: Cascade)
+  questions QuizQuestion[]
+  answers   QuizAnswer[]
+
+  @@index([creator_id])
+  @@index([status])
+  @@map("quiz")
+}
+
+model QuizQuestion {
+  id                String  @id @default(uuid())
+  quiz_id           String
+  content           String
+  correct_option_id String?
+  explanation       String?
+  order             Int
+
+  quiz           Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  options        QuizOption[] @relation("QuestionOptions")
+  correct_option QuizOption?  @relation("CorrectOption", fields: [correct_option_id], references: [id], onDelete: Restrict)
+  answers        QuizAnswer[]
+
+  @@map("quiz_question")
+}
+
+model QuizOption {
+  id          String  @id @default(uuid())
+  question_id String
+  content     String
+  is_correct  Boolean @default(false)
+
+  question            QuizQuestion   @relation("QuestionOptions", fields: [question_id], references: [id], onDelete: Cascade)
+  correct_for         QuizQuestion[] @relation("CorrectOption")
+  selected_in_answers QuizAnswer[]
+
+  @@map("quiz_option")
+}
+
+model QuizAnswer {
+  id                 String   @id @default(uuid())
+  quiz_id            String
+  user_id            String
+  question_id        String
+  selected_option_id String
+  created_at         DateTime @default(now()) @db.Timestamptz
+
+  quiz            Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  question        QuizQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  selected_option QuizOption   @relation(fields: [selected_option_id], references: [id], onDelete: Cascade)
+
+  @@unique([quiz_id, user_id, question_id])
+  @@index([user_id, created_at(sort: Desc)])
+  @@map("quiz_answer")
+}
+
+model Admin {
+  username String @id @default("admin")
+  password String @default("admin")
+
+  @@map("admin")
+}
+
+model Config {
+  id         String  @id @default("singleton")
+  gemini_api String?
+  resend_api String?
+
+  @@map("config")
+}
