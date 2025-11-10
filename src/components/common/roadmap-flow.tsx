@@ -1,13 +1,14 @@
 import Button from '@/components/admin/ui/button';
 import apiEndpoints from '@/config/api-endpoints';
 import api from '@/utils/api';
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { addEdge, Background, Controls, ReactFlow, useEdgesState, useNodesState, type Connection, type Edge, type Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { FC } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 type RoadmapNode = {
-    roadmap_id: string;
     position_x: number;
     position_y: number;
     node_type: string;
@@ -18,7 +19,6 @@ type RoadmapNode = {
 };
 
 type RoadmapEdge = {
-    roadmap_id: string;
     source_id: string;
     target_id: string;
 };
@@ -30,16 +30,18 @@ type RoadmapFlowProps = {
     onSave: (data: { name: string; description: string; topicIds: string[]; nodes: RoadmapNode[]; edges: RoadmapEdge[] }) => void;
     onCancel: () => void;
     roadmapId?: string;
+    viewOnly?: boolean;
 };
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
-const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave, onCancel, roadmapId }) => {
+const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave, onCancel, roadmapId, viewOnly = false }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [isEditingNode, setIsEditingNode] = useState(false);
+    const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -53,8 +55,14 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
             if (response.data.success) {
                 const roadmap = response.data.data;
 
+                const nodeIdToPositionKey = new Map();
+                for (const node of roadmap.nodes) {
+                    const positionKey = `${Math.round(node.position_x)}_${Math.round(node.position_y)}`;
+                    nodeIdToPositionKey.set(node.id, positionKey);
+                }
+
                 const flowNodes = roadmap.nodes.map((node: any) => ({
-                    id: `${node.position_x}_${node.position_y}`,
+                    id: `${Math.round(node.position_x)}_${Math.round(node.position_y)}`,
                     type: node.node_type || 'default',
                     position: { x: node.position_x, y: node.position_y },
                     data: {
@@ -62,14 +70,24 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                         content: node.content || '',
                         level: node.level
                     },
-                    style: node.level === 'REQUIRED' ? { background: '#ffffff', border: '2px solid #000000' } : { background: '#ffffff', border: '1px solid #d1d5db' }
+                    style: node.level === 'REQUIRED' ? { background: '#ffffff', border: '2px solid #000000', cursor: 'pointer' } : { background: '#ffffff', border: '1px solid #d1d5db', cursor: 'pointer' }
                 }));
 
-                const flowEdges = roadmap.edges.map((edge: any) => ({
-                    id: `${edge.source_id}-${edge.target_id}`,
-                    source: edge.source_id,
-                    target: edge.target_id
-                }));
+                const flowEdges = roadmap.edges
+                    .map((edge: any) => {
+                        const sourceKey = nodeIdToPositionKey.get(edge.source_id);
+                        const targetKey = nodeIdToPositionKey.get(edge.target_id);
+
+                        if (sourceKey && targetKey) {
+                            return {
+                                id: edge.id,
+                                source: sourceKey,
+                                target: targetKey
+                            };
+                        }
+                        return null;
+                    })
+                    .filter(Boolean);
 
                 setNodes(flowNodes.length > 0 ? flowNodes : initialNodes);
                 setEdges(flowEdges);
@@ -91,10 +109,22 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
 
     const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
-    const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-        setSelectedNode(node);
-        setIsEditingNode(true);
-    }, []);
+    const onNodeClick = useCallback(
+        (_event: React.MouseEvent, node: Node) => {
+            if (viewOnly) {
+                const apiNode = nodes.find((n) => n.id === node.id);
+
+                if (apiNode) {
+                    setSelectedNode(apiNode);
+                    setIsDetailDrawerOpen(true);
+                }
+            } else {
+                setSelectedNode(node);
+                setIsEditingNode(true);
+            }
+        },
+        [viewOnly, nodes]
+    );
 
     const handleNodeUpdate = (updatedData: any) => {
         if (!selectedNode) return;
@@ -109,7 +139,6 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
 
     const handleSave = () => {
         const roadmapNodes = nodes.map((node) => ({
-            roadmap_id: '',
             position_x: node.position.x,
             position_y: node.position.y,
             node_type: node.type || 'default',
@@ -120,7 +149,6 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
         }));
 
         const roadmapEdges = edges.map((edge) => ({
-            roadmap_id: '',
             source_id: edge.source,
             target_id: edge.target
         }));
@@ -137,12 +165,14 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
     };
 
     const addNode = () => {
+        const positionX = Math.round(Math.random() * 400 + 50);
+        const positionY = Math.round(Math.random() * 300 + 50);
         const newNode: Node = {
-            id: `${nodes.length + 1}`,
+            id: `${positionX}_${positionY}`,
             type: 'default',
             position: {
-                x: Math.random() * 400 + 50,
-                y: Math.random() * 300 + 50
+                x: positionX,
+                y: positionY
             },
             data: {
                 label: '',
@@ -158,25 +188,29 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
     };
 
     return (
-        <div className='flex flex-col' style={{ height: '100vh' }}>
-            <div className='mb-4 flex shrink-0 items-center justify-between p-4'>
+        <div className='flex w-full flex-1 flex-col'>
+            <div className='flex shrink-0 items-center justify-between'>
                 <div>
                     <p className='text-lg font-semibold'>{name}</p>
                     {description && <p className='text-stone-600'>{description}</p>}
                 </div>
                 <div className='flex gap-2'>
-                    <Button onClick={addNode} disabled={loading}>
-                        Thêm Node
-                    </Button>
-                    <Button onClick={handleSave} disabled={loading}>
-                        Lưu Roadmap
-                    </Button>
+                    {!viewOnly && (
+                        <>
+                            <Button onClick={addNode} disabled={loading}>
+                                Thêm Node
+                            </Button>
+                            <Button onClick={handleSave} disabled={loading}>
+                                Lưu Roadmap
+                            </Button>
+                        </>
+                    )}
                     <Button className='bg-transparent text-stone-800 hover:bg-stone-100' onClick={onCancel}>
-                        Hủy
+                        {viewOnly ? 'Quay lại' : 'Hủy'}
                     </Button>
                 </div>
             </div>
-            <div className='flex-1'>
+            <div className='relative flex flex-1 flex-col overflow-hidden'>
                 {loading ? (
                     <div className='flex h-full items-center justify-center'>
                         <div className='text-stone-500'>Đang tải...</div>
@@ -186,53 +220,80 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                         <div className='text-red-500'>{error}</div>
                     </div>
                 ) : (
-                    <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onNodeClick={onNodeClick} fitView>
+                    <ReactFlow className='w-full flex-1' nodes={nodes} edges={edges} onNodesChange={viewOnly ? undefined : onNodesChange} onEdgesChange={viewOnly ? undefined : onEdgesChange} onConnect={viewOnly ? undefined : onConnect} onNodeClick={onNodeClick} fitView nodesDraggable={!viewOnly} nodesConnectable={!viewOnly} elementsSelectable={!viewOnly}>
                         <Controls />
                         <Background />
                     </ReactFlow>
                 )}
 
-                {isEditingNode && selectedNode && (
-                    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
-                        <div className='max-h-[80vh] w-96 overflow-auto rounded-lg bg-white p-6 shadow-lg'>
-                            <p className='mb-4 text-lg font-semibold'>Chỉnh sửa Node</p>
-                            <div className='space-y-4'>
-                                <div>
-                                    <p className='mb-1 text-sm font-medium'>Tiêu đề</p>
-                                    <input type='text' defaultValue={selectedNode.data.label as string} id='node-title' className='w-full rounded border border-gray-300 px-3 py-2' />
-                                </div>
-                                <div>
-                                    <p className='mb-1 text-sm font-medium'>Nội dung</p>
-                                    <textarea defaultValue={selectedNode.data.content as string} id='node-content' rows={3} className='w-full rounded border border-gray-300 px-3 py-2' />
-                                </div>
-                                <div>
-                                    <p className='mb-1 text-sm font-medium'>Cấp độ</p>
-                                    <select defaultValue={selectedNode.data.level as string} id='node-level' className='w-full rounded border border-gray-300 px-3 py-2'>
-                                        <option value='OPTIONAL'>Tùy chọn</option>
-                                        <option value='REQUIRED'>Bắt buộc</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className='mt-6 flex justify-end space-x-2'>
-                                <Button className='bg-transparent text-stone-800 hover:bg-stone-100' onClick={() => setIsEditingNode(false)}>
-                                    Hủy
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        const label = (document.getElementById('node-title') as HTMLInputElement).value;
-                                        const content = (document.getElementById('node-content') as HTMLTextAreaElement).value;
-                                        const level = (document.getElementById('node-level') as HTMLSelectElement).value;
-
-                                        handleNodeUpdate({ label, content, level });
-                                    }}
-                                >
-                                    Lưu
-                                </Button>
-                            </div>
-                        </div>
+                {isDetailDrawerOpen && selectedNode && (
+                    <div className='absolute top-0 right-0 z-50 h-full w-80 bg-white shadow-lg'>
+                        <NodeDetailDrawer node={selectedNode} isOpen={isDetailDrawerOpen} onClose={() => setIsDetailDrawerOpen(false)} />
                     </div>
                 )}
             </div>
+
+            {isEditingNode && selectedNode && !viewOnly && (
+                <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
+                    <div className='max-h-[80vh] w-96 overflow-auto rounded-lg bg-white p-6 shadow-lg'>
+                        <p className='mb-4 text-lg font-semibold'>Chỉnh sửa Node</p>
+                        <div className='space-y-4'>
+                            <div>
+                                <p className='mb-1 text-sm font-medium'>Tiêu đề</p>
+                                <input type='text' defaultValue={selectedNode.data.label as string} id='node-title' className='w-full rounded border border-gray-300 px-3 py-2' />
+                            </div>
+                            <div>
+                                <p className='mb-1 text-sm font-medium'>Nội dung</p>
+                                <textarea defaultValue={selectedNode.data.content as string} id='node-content' rows={3} className='w-full rounded border border-gray-300 px-3 py-2' />
+                            </div>
+                            <div>
+                                <select defaultValue={selectedNode.data.level as string} id='node-level' className='w-full rounded border border-gray-300 px-3 py-2'>
+                                    <option value='OPTIONAL'>Tùy chọn</option>
+                                    <option value='REQUIRED'>Bắt buộc</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className='mt-6 flex justify-end space-x-2'>
+                            <Button className='bg-transparent text-stone-800 hover:bg-stone-100' onClick={() => setIsEditingNode(false)}>
+                                Hủy
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    const label = (document.getElementById('node-title') as HTMLInputElement).value;
+                                    const content = (document.getElementById('node-content') as HTMLTextAreaElement).value;
+                                    const level = (document.getElementById('node-level') as HTMLSelectElement).value;
+
+                                    handleNodeUpdate({ label, content, level });
+                                }}
+                            >
+                                Lưu
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+type NodeDetailDrawerProps = {
+    node: Node | null;
+    isOpen: boolean;
+    onClose: () => void;
+};
+
+const NodeDetailDrawer: FC<NodeDetailDrawerProps> = ({ node, isOpen, onClose }) => {
+    if (!isOpen || !node) return null;
+
+    return (
+        <div className='flex h-full flex-col'>
+            <div className='flex items-center justify-between border-b p-4'>
+                <p className='text-lg font-semibold'>{String(node.data.label)}</p>
+                <button onClick={onClose} className='text-gray-500 hover:text-gray-700'>
+                    <FontAwesomeIcon icon={faTimes} />
+                </button>
+            </div>
+            <div className='flex-1 overflow-auto p-4'>{Boolean(node.data.content) && typeof node.data.content === 'string' && <p className='text-base whitespace-pre-wrap'>{node.data.content}</p>}</div>
         </div>
     );
 };

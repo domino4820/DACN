@@ -12,8 +12,9 @@ import Register from '@/pages/auth/register';
 import Verify from '@/pages/auth/verify';
 import Index from '@/pages/index';
 import Profile from '@/pages/me/profile';
-import Roadmap from '@/pages/me/roadmap.tsx';
 import NotFound from '@/pages/not-found';
+import Roadmap from '@/pages/roadmaps/roadmap';
+import RoadmapDetail from '@/pages/roadmaps/roadmap-detail';
 import ProtectedRoute from '@/router/protected-route';
 import PublicOnlyRoute from '@/router/public-only-route';
 import { createBrowserRouter, Navigate } from 'react-router';
@@ -61,11 +62,11 @@ const router = createBrowserRouter([
             },
             {
                 path: paths.roadmaps,
-                element: (
-                    <ProtectedRoute>
-                        <Roadmap />
-                    </ProtectedRoute>
-                )
+                element: <Roadmap />
+            },
+            {
+                path: paths.roadmapDetail,
+                element: <RoadmapDetail />
             },
             {
                 path: paths.notFound,

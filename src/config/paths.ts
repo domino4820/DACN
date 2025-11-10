@@ -9,6 +9,7 @@ const paths = {
     quizzes: '/quizzes',
     register: '/register',
     roadmaps: '/roadmaps',
+    roadmapDetail: '/roadmaps/:id',
     root: '/',
     admin: {
         badges: '/admin/badges',
