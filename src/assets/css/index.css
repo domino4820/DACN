@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import 'tailwindcss';
+@plugin 'tailwindcss-animate';
+@custom-variant dark (&:where(.dark, .dark *));
+@theme {
+    --font-montserrat: 'Montserrat', sans-serif;
+}
+@layer base {
+    * {
+        @apply font-montserrat;
+    }
+    html {
+        scroll-behavior: smooth;
+    }
+
+    :root {
+        text-rendering: optimizeLegibility;
+    }
+
+    body {
+        @apply bg-white text-stone-900 transition-colors duration-300 dark:bg-stone-950 dark:text-stone-100;
+    }
+
+    button,
+    label,
+    summary,
+    [role='button'] {
+        @apply cursor-pointer select-none;
+    }
+
+    input[type='checkbox'],
+    input[type='radio'] {
+        @apply appearance-auto;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        @apply appearance-none;
+    }
+
+    input[type='number'] {
+        @apply appearance-none;
+        appearance: textfield;
+        -moz-appearance: textfield;
+        -webkit-app-region: no-drag;
+    }
+
+    img,
+    video,
+    canvas {
+        @apply block h-auto max-w-full;
+    }
+
+    svg {
+        @apply block h-auto;
+    }
+
+    img {
+        @apply pointer-events-none select-none;
+    }
+
+    a {
+        @apply no-underline;
+        -webkit-user-drag: none;
+    }
+
+    textarea {
+        @apply resize-none;
+    }
+
+    ::selection {
+        @apply bg-stone-200 text-stone-900 dark:bg-stone-700 dark:text-stone-100;
+    }
+
+    /* sorry reactflow, i'm poor */
+    .react-flow__attribution {
+        @apply hidden;
+    }
+}

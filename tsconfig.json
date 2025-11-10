@@ -1,0 +1,37 @@
+{
+    "compilerOptions": {
+        "lib": ["DOM", "ES2022", "DOM.Iterable", "WebWorker"],
+        "jsx": "react-jsx",
+        "target": "ES2022",
+        "noEmit": true,
+        "skipLibCheck": true,
+        "useDefineForClassFields": true,
+
+        "module": "ESNext",
+        "moduleDetection": "force",
+        "moduleResolution": "bundler",
+        "verbatimModuleSyntax": true,
+        "resolveJsonModule": true,
+        "allowImportingTsExtensions": true,
+        "noUncheckedSideEffectImports": true,
+
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noUncheckedIndexedAccess": true,
+
+        "baseUrl": "./",
+        "paths": {
+            "@/*": ["src/*"]
+        }
+    },
+    "include": ["src", "service-worker.ts", "rsbuild.config.ts", "src/pages/admin/quizzes.tsx"],
+    "exclude": ["node_modules", "dist"]
+}
