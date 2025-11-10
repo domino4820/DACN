@@ -9,8 +9,8 @@ import { sign, type JwtVariables } from 'hono/jwt';
 import { z } from 'zod';
 
 const loginSchema = z.object({
-    username: z.string().min(CONST.USERNAME_MIN_LENGTH).max(CONST.USERNAME_MAX_LENGTH),
-    password: z.string().min(CONST.PASSWORD_MIN_LENGTH).max(CONST.PASSWORD_MAX_LENGTH)
+    username: z.string().min(CONST.USERNAME_MIN_LENGTH, MESSAGES.invalidCredentials).max(CONST.USERNAME_MAX_LENGTH, MESSAGES.invalidCredentials),
+    password: z.string().min(CONST.PASSWORD_MIN_LENGTH, MESSAGES.invalidCredentials).max(CONST.PASSWORD_MAX_LENGTH, MESSAGES.invalidCredentials)
 });
 
 const authUserSelect: Prisma.UserSelect = {

@@ -62,11 +62,11 @@ app.post('/', zValidator('json', verifySchema), async (c) => {
         }
 
         if (authUser.is_verified) {
-            return c.json({ success: false, error: 'Tài khoản đã được xác thực' }, 400);
+            return c.json({ success: false, error: MESSAGES.accountVerified }, 400);
         }
 
         if (authUser.otp !== otp) {
-            return c.json({ success: false, error: 'Mã OTP không chính xác' }, 401);
+            return c.json({ success: false, error: MESSAGES.invalidOTP }, 401);
         }
 
         await prisma.user.update({
