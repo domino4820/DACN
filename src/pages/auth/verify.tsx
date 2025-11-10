@@ -5,6 +5,7 @@ import apiEndpoints from '@/config/api-endpoints';
 import paths from '@/config/paths';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/utils/api';
+import { getErrorMessage } from '@/utils/error-handler';
 import { faKey, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AxiosError } from 'axios';
@@ -79,7 +80,7 @@ const Verify: FC = () => {
             }
         } catch (error) {
             if (error instanceof AxiosError) {
-                const errorMessage = error.response?.data?.error || 'Xác thực thất bại';
+                const errorMessage = getErrorMessage(error, 'Xác thực thất bại');
                 toast.error(errorMessage);
             }
         } finally {

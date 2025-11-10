@@ -5,6 +5,7 @@ import apiEndpoints from '@/config/api-endpoints';
 import paths from '@/config/paths';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/utils/api';
+import { getErrorMessage } from '@/utils/error-handler';
 import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AxiosError } from 'axios';
@@ -83,7 +84,7 @@ const Login: FC = () => {
                     return;
                 }
 
-                const errorMessage = error.response?.data?.error || 'Đăng nhập thất bại';
+                const errorMessage = getErrorMessage(error, 'Đăng nhập thất bại');
                 toast.error(errorMessage);
             }
         } finally {

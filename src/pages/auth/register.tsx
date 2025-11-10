@@ -4,6 +4,7 @@ import Input from '@/components/ui/input';
 import apiEndpoints from '@/config/api-endpoints';
 import paths from '@/config/paths';
 import api from '@/utils/api';
+import { getErrorMessage } from '@/utils/error-handler';
 import { faEnvelope, faLock, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AxiosError } from 'axios';
@@ -48,7 +49,7 @@ const Register: FC = () => {
             }
         } catch (error) {
             if (error instanceof AxiosError) {
-                const errorMessage = error.response?.data?.error || 'Đăng ký thất bại';
+                const errorMessage = getErrorMessage(error, 'Đăng ký thất bại');
                 toast.error(errorMessage);
             }
         } finally {

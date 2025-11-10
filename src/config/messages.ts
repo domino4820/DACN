@@ -5,6 +5,8 @@ const MESSAGES = {
     internalServerError: 'Đã xảy ra lỗi!',
     nameExists: 'Tên đã tồn tại',
     avatarInvalid: 'File không hợp lệ',
-    passwordMismatch: 'Mật khẩu không khớp'
+    passwordMismatch: 'Mật khẩu không khớp',
+    accountVerified: 'Tài khoản đã được xác thực',
+    invalidOTP: 'Mã OTP không chính xác'
 };
 export default MESSAGES;

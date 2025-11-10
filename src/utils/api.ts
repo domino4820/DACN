@@ -1,5 +1,4 @@
 import apiEndpoints from '@/config/api-endpoints';
-import paths from '@/config/paths.ts';
 import { useAdminStore } from '@/store/admin.store';
 import { useAuthStore } from '@/store/auth.store';
 import axios from 'axios';
@@ -35,9 +34,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             const { logout } = useAuthStore.getState();
             logout();
-            if (window.location.pathname !== paths.login) {
-                window.location.href = paths.login;
-            }
+            window.location.reload();
         }
         return Promise.reject(error);
     }
