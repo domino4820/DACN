@@ -101,4 +101,49 @@ app.get('/', zValidator('query', querySchema), async (c) => {
     }
 });
 
+app.get('/:id', async (c) => {
+    try {
+        const { id } = c.req.param();
+
+        const roadmap = await prisma.roadmap.findUnique({
+            where: { id },
+            include: {
+                roadmap_topics: {
+                    include: {
+                        topic: true
+                    }
+                },
+                nodes: {
+                    orderBy: {
+                        label: 'asc'
+                    }
+                },
+                edges: true
+            }
+        });
+
+        if (!roadmap) {
+            return c.json(
+                {
+                    success: false
+                },
+                404
+            );
+        }
+
+        return c.json({
+            success: true,
+            data: roadmap
+        });
+    } catch {
+        return c.json(
+            {
+                success: false,
+                error: MESSAGES.internalServerError
+            },
+            500
+        );
+    }
+});
+
 export default app;
