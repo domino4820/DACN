@@ -4,220 +4,231 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-const createRoadmapSchema = z.object({
-    name: z.string().min(1).max(100),
-    description: z.string().optional(),
-    topicIds: z.array(z.uuid()),
-    nodes: z.array(
-        z.object({
-            position_x: z.number(),
-            position_y: z.number(),
-            node_type: z.string().default('default'),
-            label: z.string(),
-            content: z.string().optional(),
-            level: z.enum(['REQUIRED', 'OPTIONAL']).default('OPTIONAL'),
-            data: z.any().optional()
-        })
-    ),
-    edges: z.array(
-        z.object({
-            source_id: z.string(),
-            target_id: z.string()
-        })
-    )
-});
-
 const app = new Hono();
 
-app.get('/', async (c) => {
-    try {
-        const roadmaps = await prisma.roadmap.findMany({
-            include: {
-                roadmap_topics: {
-                    include: {
-                        topic: true
-                    }
-                },
-                nodes: true,
-                edges: true
-            }
-        });
+const nodeSchema = z.object({
+    id: z.string(),
+    type: z.string().default('default'),
+    position: z.object({
+        x: z.number(),
+        y: z.number()
+    }),
+    data: z.object({
+        label: z.string(),
+        content: z.string().optional(),
+        level: z.enum(['REQUIRED', 'OPTIONAL']).default('OPTIONAL')
+    }),
+    className: z.string().optional(),
+    targetPosition: z.string().optional(),
+    sourcePosition: z.string().optional()
+});
 
-        return c.json({
-            success: true,
-            data: roadmaps
-        });
-    } catch {
-        return c.json(
-            {
-                success: false,
-                error: MESSAGES.internalServerError
-            },
-            500
-        );
-    }
+const edgeSchema = z.object({
+    id: z.string(),
+    source: z.string(),
+    target: z.string(),
+    type: z.string().optional()
+});
+
+const createRoadmapSchema = z.object({
+    name: z.string().min(1),
+    description: z.string().optional(),
+    nodes: z.array(nodeSchema),
+    edges: z.array(edgeSchema),
+    topicIds: z.array(z.string()).optional()
 });
 
 app.put('/', zValidator('json', createRoadmapSchema), async (c) => {
     try {
-        const { name, description, topicIds, nodes, edges } = c.req.valid('json');
+        const { name, description, nodes, edges, topicIds } = c.req.valid('json');
 
-        const roadmap = await prisma.$transaction(async (tx) => {
-            const topics = await tx.topic.findMany({
-                where: {
-                    id: {
-                        in: topicIds
-                    }
-                }
-            });
-
-            if (topics.length !== topicIds.length) {
-                throw new Error('Invalid topic IDs');
+        const existingRoadmap = await prisma.roadmap.findFirst({
+            where: { name },
+            include: {
+                nodes: true,
+                edges: true,
+                roadmap_topics: true
             }
+        });
 
-            const existingRoadmap = await tx.roadmap.findFirst({
-                where: { name }
-            });
+        let roadmap;
 
-            let newRoadmap;
-
-            if (existingRoadmap) {
-                await tx.roadmapEdge.deleteMany({
-                    where: { roadmap_id: existingRoadmap.id }
+        if (existingRoadmap) {
+            roadmap = await prisma.$transaction(async (tx) => {
+                const updatedRoadmap = await tx.roadmap.update({
+                    where: { id: existingRoadmap.id },
+                    data: {
+                        description
+                    }
                 });
 
                 await tx.roadmapNode.deleteMany({
                     where: { roadmap_id: existingRoadmap.id }
                 });
 
+                const upsertedNodes = await Promise.all(
+                    nodes.map((node) =>
+                        tx.roadmapNode.upsert({
+                            where: { id: node.id },
+                            update: {
+                                roadmap_id: existingRoadmap.id,
+                                position_x: node.position.x,
+                                position_y: node.position.y,
+                                node_type: node.type,
+                                label: node.data.label,
+                                content: node.data.content || null,
+                                level: node.data.level,
+                                data: node
+                            },
+                            create: {
+                                id: node.id,
+                                roadmap_id: existingRoadmap.id,
+                                position_x: node.position.x,
+                                position_y: node.position.y,
+                                node_type: node.type,
+                                label: node.data.label,
+                                content: node.data.content || null,
+                                level: node.data.level,
+                                data: node
+                            }
+                        })
+                    )
+                );
+
+                await tx.roadmapEdge.deleteMany({
+                    where: { roadmap_id: existingRoadmap.id }
+                });
+
+                const upsertedEdges = await Promise.all(
+                    edges.map((edge) =>
+                        tx.roadmapEdge.upsert({
+                            where: { id: edge.id },
+                            update: {
+                                roadmap_id: existingRoadmap.id,
+                                source_id: edge.source,
+                                target_id: edge.target
+                            },
+                            create: {
+                                id: edge.id,
+                                roadmap_id: existingRoadmap.id,
+                                source_id: edge.source,
+                                target_id: edge.target
+                            }
+                        })
+                    )
+                );
+
                 await tx.roadmapTopic.deleteMany({
                     where: { roadmap_id: existingRoadmap.id }
                 });
 
-                newRoadmap = await tx.roadmap.update({
-                    where: { id: existingRoadmap.id },
-                    data: {
-                        description,
-                        roadmap_topics: {
-                            create: topicIds.map((topicId) => ({
-                                topic: {
-                                    connect: {
-                                        id: topicId
-                                    }
+                if (topicIds && topicIds.length > 0) {
+                    await Promise.all(
+                        topicIds.map((topicId) =>
+                            tx.roadmapTopic.create({
+                                data: {
+                                    roadmap_id: existingRoadmap.id,
+                                    topic_id: topicId
                                 }
-                            }))
-                        }
-                    }
-                });
-            } else {
-                newRoadmap = await tx.roadmap.create({
+                            })
+                        )
+                    );
+                }
+
+                return {
+                    roadmap: updatedRoadmap,
+                    nodes: upsertedNodes,
+                    edges: upsertedEdges
+                };
+            });
+        } else {
+            roadmap = await prisma.$transaction(async (tx) => {
+                const newRoadmap = await tx.roadmap.create({
                     data: {
                         name,
-                        description,
-                        roadmap_topics: {
-                            create: topicIds.map((topicId) => ({
-                                topic: {
-                                    connect: {
-                                        id: topicId
-                                    }
-                                }
-                            }))
-                        }
+                        description
                     }
                 });
-            }
 
-            return { roadmap: newRoadmap, isNew: !existingRoadmap };
-        });
+                const upsertedNodes = await Promise.all(
+                    nodes.map((node) =>
+                        tx.roadmapNode.upsert({
+                            where: { id: node.id },
+                            update: {
+                                roadmap_id: newRoadmap.id,
+                                position_x: node.position.x,
+                                position_y: node.position.y,
+                                node_type: node.type,
+                                label: node.data.label,
+                                content: node.data.content || null,
+                                level: node.data.level,
+                                data: node
+                            },
+                            create: {
+                                id: node.id,
+                                roadmap_id: newRoadmap.id,
+                                position_x: node.position.x,
+                                position_y: node.position.y,
+                                node_type: node.type,
+                                label: node.data.label,
+                                content: node.data.content || null,
+                                level: node.data.level,
+                                data: node
+                            }
+                        })
+                    )
+                );
 
-        const { roadmap: newRoadmap, isNew } = roadmap;
+                const upsertedEdges = await Promise.all(
+                    edges.map((edge) =>
+                        tx.roadmapEdge.upsert({
+                            where: { id: edge.id },
+                            update: {
+                                roadmap_id: newRoadmap.id,
+                                source_id: edge.source,
+                                target_id: edge.target
+                            },
+                            create: {
+                                id: edge.id,
+                                roadmap_id: newRoadmap.id,
+                                source_id: edge.source,
+                                target_id: edge.target
+                            }
+                        })
+                    )
+                );
 
-        await prisma.roadmapNode.createMany({
-            data: nodes.map((node) => ({
-                roadmap_id: newRoadmap.id,
-                position_x: node.position_x,
-                position_y: node.position_y,
-                node_type: node.node_type,
-                label: node.label,
-                content: node.content,
-                level: node.level,
-                data: node.data
-            }))
-        });
+                if (topicIds && topicIds.length > 0) {
+                    await Promise.all(
+                        topicIds.map((topicId) =>
+                            tx.roadmapTopic.create({
+                                data: {
+                                    roadmap_id: newRoadmap.id,
+                                    topic_id: topicId
+                                }
+                            })
+                        )
+                    );
+                }
 
-        const createdNodesList = await prisma.roadmapNode.findMany({
-            where: {
-                roadmap_id: newRoadmap.id
-            }
-        });
-
-        const positionToIdMap = new Map();
-        for (const node of createdNodesList) {
-            const key = `${Math.round(node.position_x)}_${Math.round(node.position_y)}`;
-            positionToIdMap.set(key, node.id);
-        }
-
-        if (edges.length > 0) {
-            await prisma.roadmapEdge.createMany({
-                data: edges
-                    .map((edge) => {
-                        const sourceParts = edge.source_id.split('_');
-                        const targetParts = edge.target_id.split('_');
-
-                        if (sourceParts.length !== 2 || targetParts.length !== 2) {
-                            return null;
-                        }
-
-                        const sourceX = Number.parseFloat(sourceParts[0] || '0');
-                        const sourceY = Number.parseFloat(sourceParts[1] || '0');
-                        const targetX = Number.parseFloat(targetParts[0] || '0');
-                        const targetY = Number.parseFloat(targetParts[1] || '0');
-
-                        if (Number.isNaN(sourceX) || Number.isNaN(sourceY) || Number.isNaN(targetX) || Number.isNaN(targetY)) {
-                            return null;
-                        }
-
-                        const sourceKey = `${Math.round(sourceX)}_${Math.round(sourceY)}`;
-                        const targetKey = `${Math.round(targetX)}_${Math.round(targetY)}`;
-
-                        const sourceNodeId = positionToIdMap.get(sourceKey);
-                        const targetNodeId = positionToIdMap.get(targetKey);
-
-                        if (!sourceNodeId || !targetNodeId) {
-                            return null;
-                        }
-
-                        return {
-                            roadmap_id: newRoadmap.id,
-                            source_id: sourceNodeId,
-                            target_id: targetNodeId
-                        };
-                    })
-                    .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
+                return {
+                    roadmap: newRoadmap,
+                    nodes: upsertedNodes,
+                    edges: upsertedEdges
+                };
             });
         }
 
-        const completeRoadmap = await prisma.roadmap.findUnique({
-            where: { id: newRoadmap.id },
-            include: {
-                roadmap_topics: {
-                    include: {
-                        topic: true
-                    }
-                },
-                nodes: true,
-                edges: true
+        return c.json({
+            success: true,
+            data: {
+                id: roadmap.roadmap.id,
+                name: roadmap.roadmap.name,
+                description: roadmap.roadmap.description
             }
         });
-
-        return c.json(
-            {
-                success: true,
-                data: completeRoadmap
-            },
-            isNew ? 201 : 200
-        );
-    } catch {
+    } catch (error) {
+        console.error(error);
         return c.json(
             {
                 success: false,
