@@ -18,7 +18,7 @@ const apiEndpoints = {
     admin: {
         config: '/admin/config',
         topics: '/admin/topics',
-        roadmaps: '/admin/roadmaps'
+        roadmap: '/admin/roadmap'
     }
 };
 

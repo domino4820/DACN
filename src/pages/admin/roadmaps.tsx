@@ -1,3 +1,4 @@
+import RoadmapForm from '@/components/admin/common/roadmap-form';
 import Button from '@/components/admin/ui/button';
 import Dropdown, { DropdownItem } from '@/components/ui/drop-down';
 import apiEndpoints from '@/config/api-endpoints';
@@ -56,6 +57,8 @@ const Roadmaps: FC = () => {
         hasPrevPage: false
     });
     const [topicFilter, setTopicFilter] = useState('');
+    const [showForm, setShowForm] = useState(false);
+    const [editingRoadmapId, setEditingRoadmapId] = useState<string | null>(null);
     const { contentHeight } = useLayoutStore();
 
     const fetchTopics = async () => {
@@ -115,86 +118,131 @@ const Roadmaps: FC = () => {
         setPagination((prev) => ({ ...prev, currentPage: 1 }));
     };
 
+    const handleDeleteRoadmap = async (id: string) => {
+        try {
+            await api.delete<ApiResponse<null>>(`${apiEndpoints.admin.roadmap}/${id}`);
+            fetchRoadmaps(pagination.currentPage, topicFilter);
+        } catch (err) {
+            if (isAxiosError(err)) {
+                setError(err.response?.data?.error || MESSAGES.internalServerError);
+            } else {
+                setError(MESSAGES.internalServerError);
+            }
+        }
+    };
+
+    const handleEditRoadmap = (id: string) => {
+        setEditingRoadmapId(id);
+        setShowForm(true);
+    };
+
     return (
         <div className='flex flex-col' style={{ height: `${contentHeight}px` }}>
             <div className='mb-4 flex shrink-0 items-center justify-between'>
                 <p className='text-2xl font-bold'>Quản lý Roadmaps</p>
+                <Button onClick={() => setShowForm(!showForm)}>Tạo Roadmap</Button>
             </div>
 
             {error && <div className='mb-4 shrink-0 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700'>{error}</div>}
 
-            <div className='mb-4 shrink-0'>
-                <Dropdown trigger={topicFilter || 'Chọn chủ đề'} triggerVariant='outline' triggerClassName='inline-flex items-center justify-start w-[150px] truncate rounded-md border border-stone-800 px-4 py-2 text-left align-middle font-sans text-sm font-medium transition-all duration-300 ease-in' menuClassName='w-[150px]'>
-                    <DropdownItem onClick={() => handleTopicSelect('')}>Tất cả</DropdownItem>
-                    {topics.map((topic) => (
-                        <DropdownItem key={topic.id} onClick={() => handleTopicSelect(topic.name)}>
-                            {topic.name}
-                        </DropdownItem>
-                    ))}
-                </Dropdown>
-            </div>
+            {showForm && (
+                <RoadmapForm
+                    onClose={() => {
+                        setShowForm(false);
+                        setEditingRoadmapId(null);
+                    }}
+                    onSuccess={() => fetchRoadmaps(pagination.currentPage, topicFilter)}
+                    roadmapId={editingRoadmapId || undefined}
+                />
+            )}
 
-            <div className='flex-1 overflow-hidden rounded-lg bg-white shadow'>
-                <div className='h-full overflow-y-auto p-4'>
-                    {loading ? (
-                        <div className='flex h-64 items-center justify-center'>
-                            <div className='text-stone-600 dark:text-stone-400'>Đang tải...</div>
+            {!showForm && (
+                <>
+                    <div className='mb-4 flex shrink-0 items-center gap-4'>
+                        <div>
+                            <Dropdown trigger={topicFilter || 'Chọn chủ đề'} triggerVariant='outline' triggerClassName='inline-flex items-center justify-start w-[150px] truncate rounded-md border border-stone-800 px-4 py-2 text-left align-middle font-sans text-sm font-medium transition-all duration-300 ease-in' menuClassName='w-[150px]'>
+                                <DropdownItem onClick={() => handleTopicSelect('')}>Tất cả</DropdownItem>
+                                {topics.map((topic) => (
+                                    <DropdownItem key={topic.id} onClick={() => handleTopicSelect(topic.name)}>
+                                        {topic.name}
+                                    </DropdownItem>
+                                ))}
+                            </Dropdown>
                         </div>
-                    ) : (
-                        <>
-                            {roadmaps.length > 0 ? (
-                                <>
-                                    <div className='mb-8 flex flex-wrap gap-4'>
-                                        {roadmaps.map((roadmap) => (
-                                            <div key={roadmap.id} className='min-w-[calc(50%-8px)] flex-1 rounded-lg border border-stone-200 bg-white p-6 shadow-md dark:border-stone-700 dark:bg-stone-800'>
-                                                <p className='mb-2 text-lg font-semibold text-stone-900 dark:text-stone-100'>{roadmap.name}</p>
+                    </div>
 
-                                                {roadmap.description && <p className='mb-4 line-clamp-2 text-stone-600 dark:text-stone-400'>{roadmap.description}</p>}
-
-                                                <div className='mb-4 flex flex-wrap gap-2'>
-                                                    {roadmap.roadmap_topics.map(({ topic }) => (
-                                                        <span key={topic.id} className='rounded-md bg-stone-100 px-2 py-1 text-xs text-stone-700 dark:bg-stone-700 dark:text-stone-300'>
-                                                            {topic.name}
-                                                        </span>
-                                                    ))}
-                                                </div>
-
-                                                <div className='flex items-center justify-between text-sm text-stone-500 dark:text-stone-400'>
-                                                    <div>
-                                                        <span>{roadmap._count.nodes} nodes</span>
-                                                        <span className='mx-2'>•</span>
-                                                        <span>{roadmap._count.user_paths} người dùng</span>
+                    <div className='flex-1 overflow-hidden rounded-lg bg-white shadow'>
+                        <div className='h-full overflow-y-auto'>
+                            <table className='min-w-full divide-y divide-gray-200'>
+                                <thead className='sticky top-0 z-10 bg-gray-50'>
+                                    <tr>
+                                        <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Tên Roadmap</th>
+                                        <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Mô tả</th>
+                                        <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Chủ đề</th>
+                                        <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Người học</th>
+                                        <th className='px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase'>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody className='divide-y divide-gray-200 bg-white'>
+                                    {loading ? (
+                                        <tr>
+                                            <td colSpan={5} className='px-4 py-4 text-center text-gray-500'>
+                                                Đang tải...
+                                            </td>
+                                        </tr>
+                                    ) : roadmaps.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className='px-4 py-4 text-center text-gray-500'>
+                                                Không có roadmap nào
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        roadmaps.map((roadmap) => (
+                                            <tr key={roadmap.id}>
+                                                <td className='px-4 py-4 text-sm font-medium whitespace-nowrap text-gray-900'>{roadmap.name}</td>
+                                                <td className='max-w-xs truncate px-4 py-4 text-sm text-gray-500'>{roadmap.description}</td>
+                                                <td className='px-4 py-4 text-sm text-gray-500'>
+                                                    <div className='max-w-[100px] truncate whitespace-nowrap'>
+                                                        {roadmap.roadmap_topics.map(({ topic }, index) => (
+                                                            <span key={topic.id}>
+                                                                {topic.name}
+                                                                {index < roadmap.roadmap_topics.length - 1 && ', '}
+                                                            </span>
+                                                        ))}
                                                     </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {pagination.totalPages > 1 && (
-                                        <div className='mt-8 flex items-center justify-center gap-2'>
-                                            <Button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={!pagination.hasPrevPage} className='bg-transparent text-stone-800 transition-all duration-200 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50'>
-                                                Trang trước
-                                            </Button>
-
-                                            <span className='text-stone-600 dark:text-stone-400'>
-                                                Trang {pagination.currentPage} / {pagination.totalPages}
-                                            </span>
-
-                                            <Button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={!pagination.hasNextPage} className='bg-transparent text-stone-800 transition-all duration-200 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50'>
-                                                Trang sau
-                                            </Button>
-                                        </div>
+                                                </td>
+                                                <td className='px-4 py-4 text-sm whitespace-nowrap text-gray-500'>{roadmap._count.user_paths}</td>
+                                                <td className='px-4 py-4 text-right text-sm font-medium whitespace-nowrap'>
+                                                    <Button className='mr-2 bg-transparent text-stone-800 transition-all duration-200 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50' onClick={() => handleEditRoadmap(roadmap.id)}>
+                                                        Chỉnh sửa
+                                                    </Button>
+                                                    <Button className='bg-transparent text-stone-800 transition-all duration-200 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50' onClick={() => handleDeleteRoadmap(roadmap.id)}>
+                                                        Xóa
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))
                                     )}
-                                </>
-                            ) : (
-                                <div className='py-12 text-center'>
-                                    <p className='text-stone-600 dark:text-stone-400'>{topicFilter ? 'Không tìm thấy roadmap nào theo topic đã chọn.' : 'Chưa có roadmap nào.'}</p>
-                                </div>
-                            )}
-                        </>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {pagination.totalPages > 1 && (
+                        <div className='mt-4 flex justify-center space-x-2'>
+                            <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={!pagination.hasPrevPage} className='rounded border border-stone-300 bg-white px-3 py-1 text-sm disabled:opacity-50'>
+                                Trước
+                            </button>
+                            <span className='px-3 py-1 text-sm'>
+                                Trang {pagination.currentPage} / {pagination.totalPages}
+                            </span>
+                            <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={!pagination.hasNextPage} className='rounded border border-stone-300 bg-white px-3 py-1 text-sm disabled:opacity-50'>
+                                Sau
+                            </button>
+                        </div>
                     )}
-                </div>
-            </div>
+                </>
+            )}
         </div>
     );
 };

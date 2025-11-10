@@ -34,7 +34,7 @@ const Header = forwardRef<HTMLElement>((_props, ref) => {
                             <span className='text-sm font-bold text-stone-800 dark:text-stone-200'>E Roadmap</span>
                         </LinkBtn>
                     </div>
-                    <div className={`mx-4 transition-all duration-700 ease-in-out origin-left ${isSearchFocused ? 'max-w-2xl flex-1' : 'max-w-md flex-1'}`}>
+                    <div className={`mx-4 origin-left transition-all duration-700 ease-in-out ${isSearchFocused ? 'max-w-2xl flex-1' : 'max-w-md flex-1'}`}>
                         <div className='relative'>
                             <Input type='text' placeholder='Tìm kiếm...' className='bg-white/50 pl-10 backdrop-blur-xs dark:bg-stone-800/50' onFocus={() => setIsSearchFocused(true)} onBlur={() => setIsSearchFocused(false)} />
                             <div className='absolute top-1/2 left-3 -translate-y-1/2 text-stone-500 dark:text-stone-400'>
