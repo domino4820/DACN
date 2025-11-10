@@ -5,11 +5,41 @@ import apiEndpoints from '@/config/api-endpoints';
 import api from '@/utils/api';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { addEdge, Background, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type Node } from '@xyflow/react';
+import { addEdge, Background, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type Node, type OnConnectEnd } from '@xyflow/react';
 import type { FC } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import Dropdown, { DropdownItem } from '@/components/ui/drop-down';
+
+type RoadmapNodeData = {
+    id: string;
+    roadmap_id: string;
+    position_x: number;
+    position_y: number;
+    node_type: string;
+    label: string;
+    content?: string;
+    level: 'REQUIRED' | 'OPTIONAL';
+    data?: {
+        data?: {
+            level?: 'REQUIRED' | 'OPTIONAL';
+        };
+    };
+};
+
+type RoadmapEdgeData = {
+    id: string;
+    roadmap_id: string;
+    source_id: string;
+    target_id: string;
+};
+
+type RoadmapData = {
+    id: string;
+    name: string;
+    description?: string;
+    nodes: RoadmapNodeData[];
+    edges: RoadmapEdgeData[];
+};
 
 type RoadmapFlowProps = {
     name: string;
@@ -19,41 +49,50 @@ type RoadmapFlowProps = {
     onCancel: () => void;
     roadmapId?: string;
     viewOnly?: boolean;
+    nodes?: Node[];
+    edges?: Edge[];
 };
 
-const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave, onCancel, roadmapId, viewOnly = false }) => {
-    const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
+const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave, onCancel, roadmapId, viewOnly = false, nodes: initialNodes, edges: initialEdges }) => {
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes || []);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges || []);
     const { toObject, screenToFlowPosition } = useReactFlow();
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [isEditingNode, setIsEditingNode] = useState(false);
     const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [connectionInProgress, setConnectionInProgress] = useState<{ source: string | null }>({ source: null });
-    const [contextMenu, setContextMenu] = useState<{ nodeId: string; x: number; y: number } | null>(null);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
     const fetchRoadmapData = async () => {
-        if (!roadmapId) return;
+        if (!roadmapId || (initialNodes && initialEdges)) return;
 
         try {
             setLoading(true);
             const response = await api.get(`${apiEndpoints.public.roadmaps}/${roadmapId}`);
 
             if (response.data.success) {
-                const roadmap = response.data.data;
+                const roadmap: RoadmapData = response.data.data;
 
-                const flowNodes = roadmap.nodes.map((node: any) => {
+                const flowNodes = roadmap.nodes.map((node: RoadmapNodeData): Node => {
                     const nodeData = node.data;
                     if (nodeData && typeof nodeData === 'object') {
-                        const level = nodeData.data?.level || nodeData.data?.data?.level || 'OPTIONAL';
+                        const level = nodeData.data?.level || node.level || 'OPTIONAL';
                         return {
-                            ...nodeData,
-                            className: level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!'
+                            id: node.id,
+                            type: node.node_type || 'default',
+                            position: { x: node.position_x, y: node.position_y },
+                            data: {
+                                label: node.label,
+                                content: node.content || '',
+                                level: level,
+                                deletable: true
+                            },
+                            className: level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white! cursor-pointer!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!'
                         };
                     }
 
+                    const level = node.level || 'OPTIONAL';
                     return {
                         id: node.id,
                         type: node.node_type || 'default',
@@ -61,13 +100,14 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                         data: {
                             label: node.label,
                             content: node.content || '',
-                            level: node.level
+                            level: level,
+                            deletable: true
                         },
-                        className: node.level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!'
+                        className: level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white! cursor-pointer!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!'
                     };
                 });
 
-                const flowEdges = roadmap.edges.map((edge: any) => ({
+                const flowEdges = roadmap.edges.map((edge: RoadmapEdgeData) => ({
                     id: edge.id,
                     source: edge.source_id,
                     target: edge.target_id,
@@ -88,75 +128,97 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
     };
 
     useEffect(() => {
-        if (roadmapId) {
+        if (roadmapId && !initialNodes && !initialEdges) {
             fetchRoadmapData();
+        } else if (!roadmapId && !initialNodes && !initialEdges) {
+            const initialNode: Node = {
+                id: uuidv4(),
+                type: 'default',
+                position: { x: 0, y: 0 },
+                data: {
+                    label: '-',
+                    content: '',
+                    level: 'REQUIRED',
+                    deletable: false
+                },
+                className: 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white! cursor-pointer!'
+            };
+            setNodes([initialNode]);
         }
-    }, [roadmapId]);
+    }, [roadmapId, initialNodes, initialEdges, setNodes]);
+
+    const handleDeleteNode = useCallback(() => {
+        if (!selectedNode) return;
+
+        if (selectedNode.data.deletable === false) return;
+
+        setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
+        setEdges((eds) => eds.filter((edge) => edge.source !== selectedNode.id && edge.target !== selectedNode.id));
+        setSelectedNode(null);
+    }, [selectedNode, setNodes, setEdges]);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Delete') {
+                handleDeleteNode();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleDeleteNode]);
 
     const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
-    const onConnectStart = useCallback((_: any, { nodeId }: { nodeId: string | null }) => {
-        setConnectionInProgress({ source: nodeId });
-    }, []);
+    const onConnectEnd: OnConnectEnd = useCallback(
+        (event: MouseEvent | TouchEvent, connectionState) => {
+            if (!connectionState.isValid && connectionState.fromNode) {
+                const fromNodeId = connectionState.fromNode.id;
 
-    const onConnectEnd = useCallback(
-        (event: MouseEvent | TouchEvent) => {
-            if (!connectionInProgress.source) return;
+                if (!('clientX' in event)) return;
 
-            const targetIsPane = (event.target as HTMLElement).classList.contains('react-flow__pane');
+                const targetIsNode = (event.target as HTMLElement).closest('.react-flow__node');
+                if (targetIsNode) return;
 
-            if (targetIsPane) {
                 const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
                 if (!reactFlowBounds) return;
 
-                let clientX: number;
-                let clientY: number;
-
-                if ('clientX' in event) {
-                    clientX = event.clientX;
-                    clientY = event.clientY;
-                } else {
-                    const touchEvent = event as any;
-                    const firstTouch = touchEvent.touches?.[0];
-                    if (!firstTouch) return;
-
-                    clientX = firstTouch.clientX;
-                    clientY = firstTouch.clientY;
-                }
-
                 const position = screenToFlowPosition({
-                    x: clientX,
-                    y: clientY
+                    x: event.clientX,
+                    y: event.clientY
                 });
 
+                const newNodeId = uuidv4();
                 const newNode: Node = {
-                    id: uuidv4(),
+                    id: newNodeId,
                     type: 'default',
                     position,
                     data: {
-                        label: '',
+                        label: `-`,
                         content: '',
-                        level: 'OPTIONAL'
+                        level: 'OPTIONAL',
+                        deletable: true
                     },
                     className: 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!'
                 };
 
                 setNodes((nds) => nds.concat(newNode));
 
-                if (connectionInProgress.source) {
+                if (fromNodeId) {
                     const newEdge: Edge = {
                         id: uuidv4(),
-                        source: connectionInProgress.source,
-                        target: newNode.id,
+                        source: fromNodeId,
+                        target: newNodeId,
                         type: 'smoothstep'
                     };
                     setEdges((eds) => eds.concat(newEdge));
                 }
             }
-
-            setConnectionInProgress({ source: null });
         },
-        [connectionInProgress.source, screenToFlowPosition, setNodes, setEdges]
+        [screenToFlowPosition, setNodes, setEdges]
     );
 
     const onNodeClick = useCallback(
@@ -170,20 +232,33 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                 }
             } else {
                 setSelectedNode(node);
-                setIsEditingNode(true);
             }
         },
         [viewOnly, nodes]
     );
 
-    const handleNodeUpdate = (updatedData: any) => {
+    const onNodeDoubleClick = useCallback(
+        (_event: React.MouseEvent, node: Node) => {
+            if (viewOnly) return;
+
+            setSelectedNode(node);
+            setIsEditingNode(true);
+        },
+        [viewOnly]
+    );
+
+    const onPaneClick = useCallback(() => {
+        setSelectedNode(null);
+    }, []);
+
+    const handleNodeUpdate = (updatedData: { label: string; content: string; level: 'REQUIRED' | 'OPTIONAL' }) => {
         if (!selectedNode) return;
 
         setNodes((nds) =>
             nds.map((node) => {
                 if (node.id === selectedNode.id) {
-                    const level = updatedData.level || node.data.level;
-                    const nodeClassName = level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!';
+                    const level = updatedData.level || (node.data.level as 'REQUIRED' | 'OPTIONAL');
+                    const nodeClassName = level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white! cursor-pointer!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!';
 
                     return {
                         ...node,
@@ -242,7 +317,7 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                         <div className='text-red-500 dark:text-red-400'>{error}</div>
                     </div>
                 ) : (
-                    <ReactFlow className='w-full! flex-1!' nodes={nodes} edges={edges} onNodesChange={viewOnly ? undefined : onNodesChange} onEdgesChange={viewOnly ? undefined : onEdgesChange} onConnect={viewOnly ? undefined : onConnect} onConnectStart={viewOnly ? undefined : onConnectStart} onConnectEnd={viewOnly ? undefined : onConnectEnd} onNodeClick={onNodeClick} fitView nodesDraggable={!viewOnly} nodesConnectable={!viewOnly} elementsSelectable={!viewOnly} defaultEdgeOptions={{ type: 'smoothstep' }}>
+                    <ReactFlow className='w-full! flex-1!' nodes={nodes} edges={edges} onNodesChange={viewOnly ? undefined : onNodesChange} onEdgesChange={viewOnly ? undefined : onEdgesChange} onConnect={viewOnly ? undefined : onConnect} onConnectEnd={viewOnly ? undefined : onConnectEnd} onNodeClick={onNodeClick} onNodeDoubleClick={onNodeDoubleClick} onPaneClick={onPaneClick} fitView nodesDraggable={!viewOnly} nodesConnectable={!viewOnly} elementsSelectable={true} defaultEdgeOptions={{ type: 'smoothstep' }}>
                         <Background color='#aaa' gap={16} />
                     </ReactFlow>
                 )}
@@ -256,7 +331,7 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
 
             {isEditingNode && selectedNode && !viewOnly && (
                 <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/20'>
-                    <div className='max-h-[80vh] w-96 overflow-auto rounded-md border border-stone-300 bg-white p-6 text-stone-800 shadow-lg'>
+                    <div className='max-h-[80vh] w-96 overflow-auto rounded-md border border-stone-300 bg-white p-4 text-stone-800 shadow-lg'>
                         <p className='mb-4 text-lg font-semibold'>Chỉnh sửa Node</p>
                         <div className='space-y-4'>
                             <div>
@@ -275,7 +350,7 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                                 </select>
                             </div>
                         </div>
-                        <div className='mt-6 flex justify-end space-x-2'>
+                        <div className='mt-4 flex justify-end space-x-2'>
                             <Button className='bg-stone-200 text-stone-800 hover:bg-stone-300' onClick={() => setIsEditingNode(false)}>
                                 Hủy
                             </Button>
@@ -283,7 +358,7 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                                 onClick={() => {
                                     const label = (document.getElementById('node-title') as HTMLInputElement).value;
                                     const content = (document.getElementById('node-content') as HTMLTextAreaElement).value;
-                                    const level = (document.getElementById('node-level') as HTMLSelectElement).value;
+                                    const level = (document.getElementById('node-level') as HTMLSelectElement).value as 'REQUIRED' | 'OPTIONAL';
 
                                     handleNodeUpdate({ label, content, level });
                                 }}

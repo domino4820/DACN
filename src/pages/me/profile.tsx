@@ -356,8 +356,8 @@ const Profile: FC = () => {
 
                 <div className='flex w-1/2 items-center justify-center'>
                     <div className='relative h-full w-full overflow-hidden rounded-md border border-white bg-white/10 shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] backdrop-blur-xs dark:border-stone-700 dark:bg-stone-900/50 dark:shadow-[inset_0_1px_0px_rgba(255,255,255,0.1),0_0_9px_rgba(0,0,0,0.5),0_3px_8px_rgba(0,0,0,0.3)]'>
-                        <div className='flex h-full flex-col items-center justify-start p-8 font-semibold text-stone-800 dark:text-stone-200'>
-                            <div className='mb-6'>
+                        <div className='flex h-full flex-col items-center justify-start p-4 font-semibold text-stone-800 dark:text-stone-200'>
+                            <div className='mb-4'>
                                 <button className='group relative cursor-pointer' onClick={handleAvatarClick}>
                                     <input type='file' ref={fileInputRef} onChange={handleAvatarChange} accept='image/*' className='hidden' />
                                     {user.profile?.avatar_url ? (

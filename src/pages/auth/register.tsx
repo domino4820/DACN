@@ -71,7 +71,7 @@ const Register: FC = () => {
                 </div>
 
                 {registrationSuccess ? (
-                    <div className='space-y-6'>
+                    <div className='space-y-4'>
                         <div className='rounded-md bg-green-50 p-4 dark:bg-green-900/20'>
                             <div className='flex'>
                                 <div className='shrink-0'>
@@ -100,7 +100,7 @@ const Register: FC = () => {
                     </div>
                 ) : (
                     <>
-                        <form onSubmit={handleSubmit} className='space-y-6'>
+                        <form onSubmit={handleSubmit} className='space-y-4'>
                             <div>
                                 <label htmlFor='username' className='mb-2 block text-sm font-medium text-stone-900 dark:text-stone-100'>
                                     Tên đăng nhập

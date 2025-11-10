@@ -1,9 +1,11 @@
+import EmptyRoadmapImage from '@/assets/lottie/404-v2.json';
 import LoadingImage from '@/assets/lottie/loading.json';
 import Dropdown, { DropdownItem } from '@/components/ui/drop-down';
+import Pagination from '@/components/ui/pagination';
 import apiEndpoints from '@/config/api-endpoints';
 import MESSAGES from '@/config/messages';
 import api from '@/utils/api';
-import { faBookOpen, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faBookOpen, faClock, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { isAxiosError } from 'axios';
 import Lottie from 'lottie-react';
@@ -121,66 +123,85 @@ const Roadmap: FC = () => {
         navigate(`/roadmaps/${roadmapId}`);
     };
 
+    if (loading) {
+        return (
+            <div className='flex w-full max-w-4xl flex-1 items-center justify-center rounded-lg bg-white shadow-lg duration-700 dark:bg-stone-800'>
+                <div className='w-full p-4'>
+                    <div className='flex items-center justify-center'>
+                        <Lottie animationData={LoadingImage} loop={true} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className='flex w-full max-w-4xl flex-1 items-start justify-center rounded-lg bg-white shadow-lg duration-700 dark:bg-stone-800'>
-            <div className='w-full p-4'>
-                <div className='mb-6 flex shrink-0 items-center justify-between'>
-                    <p className='text-2xl font-bold'>Danh sách Roadmaps</p>
-                    <Dropdown trigger={topicFilter || 'Chọn chủ đề'} triggerVariant='outline' triggerClassName='inline-flex items-center justify-start w-[150px] truncate rounded-md border border-stone-800 px-4 py-2 text-left align-middle font-sans text-sm font-medium transition-all duration-300 ease-in' menuClassName='w-[150px]'>
+        <div className='flex w-full max-w-4xl flex-1 flex-col rounded-lg bg-white p-4 shadow-lg dark:bg-stone-800'>
+            <div className='mb-4 flex shrink-0 items-center justify-between'>
+                <div className='flex items-center gap-3'>
+                    <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700'>
+                        <FontAwesomeIcon icon={faBookOpen} className='text-stone-600 dark:text-stone-400' />
+                    </div>
+                    <div>
+                        <p className='text-2xl font-bold text-stone-900 dark:text-stone-100'>Danh sách Roadmaps</p>
+                        <p className='text-sm text-stone-600 dark:text-stone-400'>Khám phá các lộ trình học tập phù hợp với bạn</p>
+                    </div>
+                </div>
+                <div>
+                    <Dropdown trigger={topicFilter || 'Chọn topic'} triggerVariant='outline' triggerClassName='inline-flex items-center justify-start w-[200px] truncate rounded-md border border-stone-800 px-4 py-2 text-left align-middle font-sans text-sm font-medium' menuClassName='w-[200px]'>
                         <DropdownItem onClick={() => handleTopicSelect('')}>Tất cả</DropdownItem>
                         {topics.map((topic) => (
                             <DropdownItem key={topic.id} onClick={() => handleTopicSelect(topic.name)}>
-                                {topic.name}
+                                <div className='max-w-[180px] truncate'>{topic.name}</div>
                             </DropdownItem>
                         ))}
                     </Dropdown>
                 </div>
-
-                {loading ? (
-                    <div className='flex items-center justify-center'>
-                        <Lottie animationData={LoadingImage} loop={true} />
-                    </div>
-                ) : roadmaps.length === 0 ? (
-                    <div className='flex items-center justify-center'>
-                        <div className='text-stone-500'>Không có roadmap nào</div>
-                    </div>
-                ) : (
-                    <div className='columns-4 gap-4 space-y-4'>
-                        {roadmaps.map((roadmap) => (
-                            <button key={roadmap.id} className='group mb-4 cursor-pointer break-inside-avoid overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm transition-all duration-200 hover:border-stone-300 hover:shadow-md dark:border-stone-700 dark:bg-stone-800 dark:hover:border-stone-600' onClick={() => handleViewRoadmap(roadmap.id)}>
-                                <div className='p-3'>
-                                    <div className='mb-2 flex items-start justify-between'>
-                                        <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700'>
-                                            <FontAwesomeIcon icon={faBookOpen} className='text-sm text-stone-600 dark:text-stone-400' />
-                                        </div>
-                                        <div className='flex items-center text-xs text-stone-500 dark:text-stone-400'>
-                                            <FontAwesomeIcon icon={faUsers} className='mr-1' />
-                                            <span className='font-medium'>{roadmap._count.user_paths}</span>
-                                        </div>
-                                    </div>
-
-                                    <p className='mb-2 text-base font-semibold text-stone-900 transition-colors group-hover:text-stone-700 dark:text-stone-100 dark:group-hover:text-stone-300'>{roadmap.name}</p>
-                                    <p className='line-clamp-2 text-xs text-stone-600 dark:text-stone-400'>{roadmap.description}</p>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                {pagination.totalPages > 1 && (
-                    <div className='mt-6 flex justify-center space-x-2'>
-                        <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={!pagination.hasPrevPage} className='rounded border border-stone-300 bg-white px-3 py-1 text-sm disabled:opacity-50 dark:border-stone-600 dark:bg-stone-800'>
-                            Trước
-                        </button>
-                        <span className='px-3 py-1 text-sm'>
-                            Trang {pagination.currentPage} / {pagination.totalPages}
-                        </span>
-                        <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={!pagination.hasNextPage} className='rounded border border-stone-300 bg-white px-3 py-1 text-sm disabled:opacity-50 dark:border-stone-600 dark:bg-stone-800'>
-                            Sau
-                        </button>
-                    </div>
-                )}
             </div>
+
+            {roadmaps.length === 0 ? (
+                <div className='flex flex-col items-center justify-center py-12'>
+                    <div className='mb-4 w-full text-center'>
+                        <p className='text-lg font-medium text-stone-600 dark:text-stone-400'>Không có roadmap nào phù hợp với bộ lọc đã chọn.</p>
+                        <p className='mt-2 text-sm text-stone-500 dark:text-stone-400'>Thử thay đổi bộ lọc hoặc quay lại sau.</p>
+                    </div>
+                    <div className='relative aspect-square w-full max-w-md overflow-hidden rounded-lg'>
+                        <Lottie animationData={EmptyRoadmapImage} loop={true} className='h-full w-full' />
+                    </div>
+                </div>
+            ) : (
+                <div className='mb-4 flex flex-wrap gap-4'>
+                    {roadmaps.map((roadmap) => (
+                        <button key={roadmap.id} className='group w-[calc(25%-12px)] cursor-pointer overflow-hidden rounded-lg border border-stone-200 bg-white p-4 text-left shadow-sm hover:border-stone-300 hover:shadow-md dark:border-stone-700 dark:bg-stone-800 dark:hover:border-stone-600' onClick={() => handleViewRoadmap(roadmap.id)}>
+                            <div className='flex h-full flex-col'>
+                                <div className='mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700'>
+                                    <FontAwesomeIcon icon={faBookOpen} className='text-xl text-stone-600 dark:text-stone-400' />
+                                </div>
+
+                                <p className='mb-2 truncate text-lg font-bold text-stone-900 group-hover:text-stone-700 dark:text-stone-100 dark:group-hover:text-stone-300'>{roadmap.name}</p>
+                                <p className='mb-4 line-clamp-3 flex-1 overflow-hidden text-sm text-stone-600 dark:text-stone-400'>{roadmap.description}</p>
+
+                                <div className='mt-auto flex items-center justify-between'>
+                                    <div className='flex items-center text-xs text-stone-500 dark:text-stone-400'>
+                                        <FontAwesomeIcon icon={faUsers} className='mr-1' />
+                                        <span className='font-medium'>{roadmap._count.user_paths}</span>
+                                    </div>
+                                    <div className='flex items-center text-xs text-stone-500 dark:text-stone-400'>
+                                        <FontAwesomeIcon icon={faClock} className='mr-1' />
+                                        <span>{roadmap._count.nodes} bài học</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {pagination.totalPages > 1 && (
+                <div className='mt-auto flex justify-center'>
+                    <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPrevPage={() => handlePageChange(pagination.currentPage - 1)} onNextPage={() => handlePageChange(pagination.currentPage + 1)} hasPrevPage={pagination.hasPrevPage} hasNextPage={pagination.hasNextPage} />
+                </div>
+            )}
         </div>
     );
 };

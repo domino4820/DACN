@@ -77,4 +77,32 @@
     .react-flow__attribution {
         @apply hidden;
     }
+
+    .selected {
+        @apply ring-stone-900! dark:ring-stone-300!;
+    }
+
+    ::-webkit-scrollbar {
+        @apply h-1.5 w-1.5;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply rounded-sm bg-stone-300;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-stone-400;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+        @apply bg-stone-600;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+        @apply bg-stone-500;
+    }
 }

@@ -106,9 +106,9 @@ const Config: FC = () => {
             {error && <div className='mb-4 shrink-0 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700'>{error}</div>}
 
             <div className='flex-1 overflow-hidden rounded-lg bg-white shadow'>
-                <div className='h-full overflow-y-auto p-6'>
+                <div className='h-full overflow-y-auto p-4'>
                     <form onSubmit={handleUpdateConfig}>
-                        <div className='mb-6'>
+                        <div className='mb-4'>
                             <label htmlFor='gemini-api' className='mb-2 block text-sm font-bold text-gray-700'>
                                 Gemini API Key
                             </label>
@@ -120,7 +120,7 @@ const Config: FC = () => {
                             </div>
                         </div>
 
-                        <div className='mb-6'>
+                        <div className='mb-4'>
                             <label htmlFor='resend-api' className='mb-2 block text-sm font-bold text-gray-700'>
                                 Resend API Key
                             </label>

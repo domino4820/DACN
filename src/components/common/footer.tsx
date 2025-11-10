@@ -10,7 +10,7 @@ import { Link } from 'react-router';
 const Footer: FC = () => {
     return (
         <footer className='mx-auto max-w-4xl'>
-            <div className='relative rounded-md border border-white bg-white/10 shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] backdrop-blur-xs dark:border-stone-700 dark:bg-stone-900/50 dark:shadow-[inset_0_1px_0px_rgba(255,255,255,0.1),0_0_9px_rgba(0,0,0,0.5),0_3px_8px_rgba(0,0,0,0.3)]'>
+            <div className='relative w-full rounded-md border border-white bg-white/10 shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] backdrop-blur-xs dark:border-stone-700 dark:bg-stone-900/50 dark:shadow-[inset_0_1px_0px_rgba(255,255,255,0.1),0_0_9px_rgba(0,0,0,0.5),0_3px_8px_rgba(0,0,0,0.3)]'>
                 <div className='relative flex items-start justify-between gap-4 p-4 font-semibold text-stone-800 dark:text-stone-200'>
                     <div className='flex flex-1 flex-col gap-2'>
                         <LinkBtn to={paths.root} variant='ghost' className='flex w-fit items-center gap-1 p-1'>

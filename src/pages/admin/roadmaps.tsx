@@ -140,7 +140,8 @@ const Roadmaps: FC = () => {
         <div className='flex flex-col' style={{ height: `${contentHeight}px` }}>
             <div className='mb-4 flex shrink-0 items-center justify-between'>
                 <p className='text-2xl font-bold'>Quản lý Roadmaps</p>
-                <Button onClick={() => setShowForm(!showForm)}>Tạo Roadmap</Button>
+
+                {!showForm && <Button onClick={() => setShowForm(!showForm)}>Tạo Roadmap</Button>}
             </div>
 
             {error && <div className='mb-4 shrink-0 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700'>{error}</div>}
@@ -160,11 +161,11 @@ const Roadmaps: FC = () => {
                 <>
                     <div className='mb-4 flex shrink-0 items-center gap-4'>
                         <div>
-                            <Dropdown trigger={topicFilter || 'Chọn chủ đề'} triggerVariant='outline' triggerClassName='inline-flex items-center justify-start w-[150px] truncate rounded-md border border-stone-800 px-4 py-2 text-left align-middle font-sans text-sm font-medium transition-all duration-300 ease-in' menuClassName='w-[150px]'>
+                            <Dropdown trigger={topicFilter || 'Chọn topic'} triggerVariant='outline' triggerClassName='inline-flex items-center justify-start w-[150px] truncate rounded-md border border-stone-800 px-4 py-2 text-left align-middle font-sans text-sm font-medium transition-all duration-300 ease-in' menuClassName='w-[150px]'>
                                 <DropdownItem onClick={() => handleTopicSelect('')}>Tất cả</DropdownItem>
                                 {topics.map((topic) => (
                                     <DropdownItem key={topic.id} onClick={() => handleTopicSelect(topic.name)}>
-                                        {topic.name}
+                                        <div className='max-w-[120px] truncate'>{topic.name}</div>
                                     </DropdownItem>
                                 ))}
                             </Dropdown>
@@ -178,7 +179,7 @@ const Roadmaps: FC = () => {
                                     <tr>
                                         <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Tên Roadmap</th>
                                         <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Mô tả</th>
-                                        <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Chủ đề</th>
+                                        <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Topic</th>
                                         <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase'>Người học</th>
                                         <th className='px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase'>Thao tác</th>
                                     </tr>

@@ -111,7 +111,7 @@ const Login: FC = () => {
                     <p className='text-stone-600 dark:text-stone-400'>Chào mừng trở lại! Nhập thông tin để tiếp tục</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className='space-y-6'>
+                <form onSubmit={handleSubmit} className='space-y-4'>
                     <div>
                         <label htmlFor='username' className='mb-2 block text-sm font-medium text-stone-900 dark:text-stone-100'>
                             Tên đăng nhập

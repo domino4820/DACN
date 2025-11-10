@@ -14,6 +14,10 @@ type Topic = {
     name: string;
 };
 
+type RoadmapTopic = {
+    topic: Topic;
+};
+
 type RoadmapFormProps = {
     onClose: () => void;
     onSuccess?: () => void;
@@ -58,7 +62,7 @@ const RoadmapForm: FC<RoadmapFormProps> = ({ onClose, onSuccess, roadmapId }) =>
                 setFormData({
                     name: roadmap.name,
                     description: roadmap.description || '',
-                    topicIds: roadmap.roadmap_topics.map((rt: any) => rt.topic.id)
+                    topicIds: roadmap.roadmap_topics.map((rt: RoadmapTopic) => rt.topic.id)
                 });
             } else {
                 setError(response.data.error || 'Load roadmap lỗi!');
@@ -98,7 +102,7 @@ const RoadmapForm: FC<RoadmapFormProps> = ({ onClose, onSuccess, roadmapId }) =>
         setShowFlow(true);
     };
 
-    const handleSaveRoadmap = async (roadmapData: any) => {
+    const handleSaveRoadmap = async (roadmapData: unknown) => {
         try {
             setLoading(true);
             setError(null);
@@ -147,13 +151,13 @@ const RoadmapForm: FC<RoadmapFormProps> = ({ onClose, onSuccess, roadmapId }) =>
                 </div>
                 <div>
                     <label htmlFor='topic-select' className='mb-2 block text-sm font-bold text-gray-700'>
-                        Chủ đề
+                        Topic
                     </label>
                     <div className='space-y-2'>
-                        <Dropdown trigger='Chọn chủ đề' triggerVariant='outline' triggerClassName='w-full' menuClassName='w-full'>
+                        <Dropdown trigger='Chọn topic' triggerVariant='outline' triggerClassName='w-full' menuClassName='w-full'>
                             {topics.map((topic) => (
                                 <DropdownItem key={topic.id} onClick={() => handleTopicSelect(topic.id)}>
-                                    {topic.name}
+                                    <div className='max-w-[200px] truncate'>{topic.name}</div>
                                 </DropdownItem>
                             ))}
                         </Dropdown>
@@ -162,7 +166,7 @@ const RoadmapForm: FC<RoadmapFormProps> = ({ onClose, onSuccess, roadmapId }) =>
                                 {formData.topicIds.map((topicId) => {
                                     const topic = topics.find((t) => t.id === topicId);
                                     return topic ? (
-                                        <span key={topicId} className='inline-block rounded bg-gray-100 px-2 py-1 text-xs'>
+                                        <span key={topicId} className='inline-block max-w-[150px] truncate rounded bg-gray-100 px-2 py-1 text-xs'>
                                             {topic.name}
                                         </span>
                                     ) : null;

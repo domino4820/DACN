@@ -10,7 +10,7 @@ const NotFound: FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className='flex w-full max-w-4xl flex-1 items-center justify-center rounded-lg bg-white shadow-lg duration-700 dark:bg-stone-800'>
+        <div className='flex w-full max-w-4xl flex-1 items-center justify-center rounded-lg bg-white p-4 shadow-lg duration-700 dark:bg-stone-800'>
             <div className='animate-in slide-in-from-right flex w-1/2 flex-col justify-center p-4 duration-1000'>
                 <div className='mb-4'>
                     <div className='mb-4 inline-flex items-center justify-center gap-3 rounded-full bg-stone-100 px-4 py-2 dark:bg-stone-700'>
