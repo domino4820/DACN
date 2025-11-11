@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import 'dotenv/config';
 import { Hono } from 'hono';
+import { Server } from 'socket.io';
 
 import adminApi from '@/api/admin/index.js';
 import meApi from '@/api/me/index.js';
@@ -24,7 +25,13 @@ api.route('/me', meApi);
 api.route('/', publicApi);
 app.route('/', api);
 
-serve(
+const io = new Server();
+
+io.on('connection', (socket) => {
+    console.log(`Client connected: ${socket.id}`);
+});
+
+const server = serve(
     {
         fetch: app.fetch,
         port: 3000
@@ -33,3 +40,5 @@ serve(
         console.log(`server is running on http://localhost:${info.port}`);
     }
 );
+
+io.attach(server);
