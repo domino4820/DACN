@@ -10,6 +10,8 @@ import Users from '@/pages/admin/users.tsx';
 import Login from '@/pages/auth/login';
 import Register from '@/pages/auth/register';
 import Verify from '@/pages/auth/verify';
+import GroupDetails from '@/pages/groups/group-details.tsx';
+import Groups from '@/pages/groups/groups.tsx';
 import Index from '@/pages/index';
 import Profile from '@/pages/me/profile';
 import NotFound from '@/pages/not-found';
@@ -67,6 +69,14 @@ const router = createBrowserRouter([
             {
                 path: paths.roadmapDetail,
                 element: <RoadmapDetail />
+            },
+            {
+                path: paths.groups,
+                element: <Groups />
+            },
+            {
+                path: paths.groupDetails,
+                element: <GroupDetails />
             },
             {
                 path: paths.notFound,

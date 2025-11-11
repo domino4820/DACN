@@ -5,12 +5,12 @@ import Pagination from '@/components/ui/pagination';
 import apiEndpoints from '@/config/api-endpoints';
 import MESSAGES from '@/config/messages';
 import api from '@/utils/api';
-import { faBookOpen, faClock, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faBookOpen, faLayerGroup, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { isAxiosError } from 'axios';
 import Lottie from 'lottie-react';
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
 
@@ -49,9 +49,11 @@ interface ApiResponse<T> {
 }
 
 const Roadmap: FC = () => {
+    const loadingRef = useRef<HTMLDivElement>(null);
     const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
     const [topics, setTopics] = useState<Topic[]>([]);
     const [loading, setLoading] = useState(true);
+    const [height, setHeight] = useState<number>(0);
     const [pagination, setPagination] = useState<Pagination>({
         currentPage: 1,
         totalPages: 1,
@@ -110,6 +112,13 @@ const Roadmap: FC = () => {
         fetchRoadmaps(pagination.currentPage, topicFilter);
     }, [pagination.currentPage, topicFilter]);
 
+    useEffect(() => {
+        if (loadingRef.current) {
+            console.log(loadingRef.current.clientHeight);
+            setHeight(loadingRef.current.clientHeight);
+        }
+    }, [loadingRef.current]);
+
     const handlePageChange = (page: number) => {
         setPagination((prev) => ({ ...prev, currentPage: page }));
     };
@@ -125,7 +134,7 @@ const Roadmap: FC = () => {
 
     if (loading) {
         return (
-            <div className='flex w-full max-w-4xl flex-1 items-center justify-center rounded-lg bg-white shadow-lg duration-700 dark:bg-stone-800'>
+            <div className='flex w-full max-w-4xl flex-1 items-center justify-center rounded-lg bg-white shadow-lg duration-700 dark:bg-stone-800' ref={loadingRef}>
                 <div className='w-full p-4'>
                     <div className='flex items-center justify-center'>
                         <Lottie animationData={LoadingImage} loop={true} />
@@ -136,7 +145,13 @@ const Roadmap: FC = () => {
     }
 
     return (
-        <div className='flex w-full max-w-4xl flex-1 flex-col rounded-lg bg-white p-4 shadow-lg dark:bg-stone-800'>
+        <div
+            className='flex w-full max-w-4xl flex-1 flex-col overflow-hidden rounded-lg bg-white p-4 shadow-lg dark:bg-stone-800'
+            style={{
+                height: height,
+                maxHeight: height
+            }}
+        >
             <div className='mb-4 flex shrink-0 items-center justify-between'>
                 <div className='flex items-center gap-3'>
                     <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700'>
@@ -159,43 +174,47 @@ const Roadmap: FC = () => {
                 </div>
             </div>
 
-            {roadmaps.length === 0 ? (
-                <div className='flex flex-col items-center justify-center py-12'>
-                    <div className='mb-4 w-full text-center'>
-                        <p className='text-lg font-medium text-stone-600 dark:text-stone-400'>Không có roadmap nào phù hợp với bộ lọc đã chọn.</p>
-                        <p className='mt-2 text-sm text-stone-500 dark:text-stone-400'>Thử thay đổi bộ lọc hoặc quay lại sau.</p>
-                    </div>
-                    <div className='relative aspect-square w-full max-w-md overflow-hidden rounded-lg'>
-                        <Lottie animationData={EmptyRoadmapImage} loop={true} className='h-full w-full' />
-                    </div>
-                </div>
-            ) : (
-                <div className='mb-4 flex flex-wrap gap-4'>
-                    {roadmaps.map((roadmap) => (
-                        <button key={roadmap.id} className='group w-[calc(25%-12px)] cursor-pointer overflow-hidden rounded-lg border border-stone-200 bg-white p-4 text-left shadow-sm hover:border-stone-300 hover:shadow-md dark:border-stone-700 dark:bg-stone-800 dark:hover:border-stone-600' onClick={() => handleViewRoadmap(roadmap.id)}>
-                            <div className='flex h-full flex-col'>
-                                <div className='mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700'>
-                                    <FontAwesomeIcon icon={faBookOpen} className='text-xl text-stone-600 dark:text-stone-400' />
-                                </div>
-
-                                <p className='mb-2 truncate text-lg font-bold text-stone-900 group-hover:text-stone-700 dark:text-stone-100 dark:group-hover:text-stone-300'>{roadmap.name}</p>
-                                <p className='mb-4 line-clamp-3 flex-1 overflow-hidden text-sm text-stone-600 dark:text-stone-400'>{roadmap.description}</p>
-
-                                <div className='mt-auto flex items-center justify-between'>
-                                    <div className='flex items-center text-xs text-stone-500 dark:text-stone-400'>
-                                        <FontAwesomeIcon icon={faUsers} className='mr-1' />
-                                        <span className='font-medium'>{roadmap._count.user_paths}</span>
+            <div className={`flex-1 ${roadmaps.length > 0 ? 'overflow-y-auto' : ''}`}>
+                {roadmaps.length === 0 ? (
+                    <>
+                        <div className='mb-4 w-full text-center'>
+                            <p className='text-lg font-medium text-stone-600 dark:text-stone-400'>Không có roadmap nào phù hợp với bộ lọc đã chọn.</p>
+                            <p className='mt-2 text-sm text-stone-500 dark:text-stone-400'>Thử thay đổi bộ lọc hoặc quay lại sau.</p>
+                        </div>
+                        <div className='mx-auto w-full max-w-md'>
+                            <Lottie animationData={EmptyRoadmapImage} loop={true} className='h-full w-full' />
+                        </div>
+                    </>
+                ) : (
+                    <div className='mb-4 flex flex-col gap-3'>
+                        {roadmaps.map((roadmap) => (
+                            <button key={roadmap.id} className='group w-full cursor-pointer overflow-hidden rounded-lg border border-stone-200 bg-white p-4 text-left shadow-sm transition-all hover:border-stone-300 hover:shadow-md dark:border-stone-700 dark:bg-stone-800 dark:hover:border-stone-600' onClick={() => handleViewRoadmap(roadmap.id)}>
+                                <div className='flex items-center gap-4'>
+                                    <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700'>
+                                        <FontAwesomeIcon icon={faBookOpen} className='text-xl text-stone-600 dark:text-stone-400' />
                                     </div>
-                                    <div className='flex items-center text-xs text-stone-500 dark:text-stone-400'>
-                                        <FontAwesomeIcon icon={faClock} className='mr-1' />
-                                        <span>{roadmap._count.nodes} bài học</span>
+
+                                    <div className='flex flex-1 flex-col overflow-hidden'>
+                                        <p className='truncate text-lg font-bold text-stone-900 group-hover:text-stone-700 dark:text-stone-100 dark:group-hover:text-stone-300'>{roadmap.name}</p>
+                                        <p className='truncate text-sm text-stone-600 dark:text-stone-400'>{roadmap.description}</p>
+                                    </div>
+
+                                    <div className='flex shrink-0 flex-col items-end gap-1 text-xs text-stone-500 sm:flex-row sm:items-center sm:gap-4 dark:text-stone-400'>
+                                        <div className='flex items-center'>
+                                            <FontAwesomeIcon icon={faUsers} className='mr-1.5' />
+                                            <span className='font-medium'>{roadmap._count.user_paths}</span>
+                                        </div>
+                                        <div className='flex items-center'>
+                                            <FontAwesomeIcon icon={faLayerGroup} className='mr-1.5' />
+                                            <span>{roadmap._count.nodes} bài học</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            )}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {pagination.totalPages > 1 && (
                 <div className='mt-auto flex justify-center'>

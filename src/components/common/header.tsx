@@ -56,7 +56,7 @@ const Header = forwardRef<HTMLElement>((_props, ref) => {
                             </LinkBtn>
                         </NavLinkGroup>
                     </div>
-                    <div className='flex items-center justify-end gap-2'>
+                    <div className='ml-2 flex items-center justify-end gap-2'>
                         {isAuthenticated ? (
                             <Dropdown
                                 trigger={

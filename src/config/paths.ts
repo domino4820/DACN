@@ -1,6 +1,7 @@
 const paths = {
     faq: '/faq',
     groups: '/groups',
+    groupDetails: '/groups/:id',
     guides: '/guides',
     login: '/login',
     verify: '/verify',

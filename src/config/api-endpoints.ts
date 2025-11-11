@@ -5,7 +5,8 @@ const apiEndpoints = {
         register: '/register',
         verify: '/verify',
         topics: '/topics',
-        roadmaps: '/roadmaps'
+        roadmaps: '/roadmaps',
+        groups: '/groups'
     },
     me: {
         getProfile: '/me/profile',
@@ -13,7 +14,8 @@ const apiEndpoints = {
         changePassword: '/me/change-password',
         updateVisibility: '/me/visibility',
         uploadAvatar: '/me/avatar',
-        roadmaps: '/me/roadmap'
+        roadmaps: '/me/roadmap',
+        groups: '/me/groups'
     },
     admin: {
         config: '/admin/config',
