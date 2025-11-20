@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Visibility {
@@ -238,15 +237,15 @@ model RoadmapTopic {
 }
 
 model RoadmapNode {
-  id         String  @id @default(uuid())
+  id         String    @id @default(uuid())
   roadmap_id String
   position_x Float
   position_y Float
-  node_type  String  @default("default")
+  node_type  String    @default("default")
   label      String
   content    String?
   level      NodeLevel @default(OPTIONAL)
-  data       Json?   @db.JsonB
+  data       Json?     @db.JsonB
 
   roadmap        Roadmap       @relation(fields: [roadmap_id], references: [id], onDelete: Cascade)
   outgoing_edges RoadmapEdge[] @relation("SourceNode")
@@ -257,7 +256,7 @@ model RoadmapNode {
 }
 
 model RoadmapEdge {
-  id         String  @id @default(uuid())
+  id         String @id @default(uuid())
   roadmap_id String
   source_id  String
   target_id  String
