@@ -1,8 +1,8 @@
 import CONST from '@/config/const.js';
 import MESSAGES from '@/config/message.js';
+import { Prisma } from '@/generated/client.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
-import { Prisma } from '@prisma/client';
 import { Hono } from 'hono';
 import { sign, type JwtVariables } from 'hono/jwt';
 import { z } from 'zod';
