@@ -32,6 +32,6 @@
         "types": ["node"],
         "verbatimModuleSyntax": true
     },
-    "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "src/generated"],
+    "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
     "include": ["src/**/*", "prisma/seed.ts"]
 }

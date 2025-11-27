@@ -1,3 +1,4 @@
+import groups from '@/api/public/groups.js';
 import roadmaps from '@/api/public/roadmaps.js';
 import topics from '@/api/public/topics.js';
 import { Hono } from 'hono';
@@ -14,4 +15,5 @@ app.route('/register', register);
 app.route('/verify', verify);
 app.route('/roadmaps', roadmaps);
 app.route('/topics', topics);
+app.route('/groups', groups);
 export default app;

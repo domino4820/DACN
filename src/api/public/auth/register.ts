@@ -1,6 +1,7 @@
 import CONST from '@/config/const.js';
 import MESSAGES from '@/config/message.js';
 import { Prisma } from '@/generated/client.js';
+import type { UserSelect } from '@/generated/models.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
 import { hash } from 'bcrypt';
@@ -15,7 +16,7 @@ const registerSchema = z.object({
     password: z.string().min(CONST.PASSWORD_MIN_LENGTH).max(CONST.PASSWORD_MAX_LENGTH)
 });
 
-const existingUserSelect: Prisma.UserSelect = {
+const existingUserSelect: UserSelect = {
     username: true,
     email: true,
     is_verified: true,
@@ -25,9 +26,9 @@ const existingUserSelect: Prisma.UserSelect = {
 const app = new Hono();
 
 app.post('/', zValidator('json', registerSchema), async (c) => {
-    try {
-        const { username, email, password } = c.req.valid('json');
+    const { username, email, password } = c.req.valid('json');
 
+    try {
         const existingUser = await prisma.user.findFirst({
             where: { OR: [{ username }, { email }] },
             select: existingUserSelect
@@ -120,7 +121,19 @@ app.post('/', zValidator('json', registerSchema), async (c) => {
             },
             201
         );
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                return c.json(
+                    {
+                        success: false,
+                        error: `${MESSAGES.userExists.replace('<username>', username).replace('<email>', email)}`
+                    },
+                    409
+                );
+            }
+        }
+
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });

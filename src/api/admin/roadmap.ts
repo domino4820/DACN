@@ -1,6 +1,9 @@
 import MESSAGES from '@/config/message.js';
+import { Prisma } from '@/generated/client.js';
+import type { NodeLevel } from '@/generated/enums.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
+import type { JsonValue } from '@prisma/client/runtime/client.js';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
@@ -51,7 +54,7 @@ app.put('/', zValidator('json', createRoadmapSchema), async (c) => {
             }
         });
 
-        let roadmap;
+        let roadmap: { roadmap: any; nodes?: { level: NodeLevel; id: string; data: JsonValue | null; label: string; content: string | null; roadmap_id: string; position_x: number; position_y: number; node_type: string }[]; edges?: { id: string; roadmap_id: string; source_id: string; target_id: string }[] };
 
         if (existingRoadmap) {
             roadmap = await prisma.$transaction(async (tx) => {
@@ -228,7 +231,18 @@ app.put('/', zValidator('json', createRoadmapSchema), async (c) => {
             }
         });
     } catch (error) {
-        console.error(error);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                return c.json(
+                    {
+                        success: false,
+                        error: MESSAGES.nameExists
+                    },
+                    409
+                );
+            }
+        }
+
         return c.json(
             {
                 success: false,
@@ -266,7 +280,13 @@ app.delete('/:id', async (c) => {
         return c.json({
             success: true
         });
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                return c.json({ success: true }, 200);
+            }
+        }
+
         return c.json(
             {
                 success: false,

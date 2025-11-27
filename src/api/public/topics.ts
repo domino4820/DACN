@@ -1,6 +1,18 @@
 import MESSAGES from '@/config/message.js';
+import type { TopicSelect } from '@/generated/models.js';
 import prisma from '@/utils/prisma.js';
 import { Hono } from 'hono';
+
+const topicListSelect: TopicSelect = {
+    id: true,
+    name: true,
+    created_at: true,
+    _count: {
+        select: {
+            roadmap_topics: true
+        }
+    }
+};
 
 const app = new Hono();
 
@@ -10,22 +22,16 @@ app.get('/', async (c) => {
             orderBy: {
                 created_at: 'desc'
             },
-            select: {
-                id: true,
-                name: true,
-                created_at: true,
-                _count: {
-                    select: {
-                        roadmap_topics: true
-                    }
-                }
-            }
+            select: topicListSelect
         });
 
-        return c.json({
-            success: true,
-            data: topics
-        });
+        return c.json(
+            {
+                success: true,
+                data: topics
+            },
+            200
+        );
     } catch {
         return c.json(
             {

@@ -21,6 +21,7 @@
 
     ```bash
     pnpm prisma migrate reset
+    pnpm prisma db seed
     ```
 
 4. Tạo GIN index:

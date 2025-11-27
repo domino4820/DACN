@@ -1,4 +1,5 @@
 import MESSAGES from '@/config/message.js';
+import { Prisma } from '@/generated/client.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -60,7 +61,13 @@ app.get('/', async (c) => {
         }
 
         return c.json({ success: true, data: user }, 200);
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                return c.json(null, 401);
+            }
+        }
+
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });
@@ -103,7 +110,13 @@ app.patch('/', zValidator('json', updateProfileSchema), async (c) => {
             },
             200
         );
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                return c.json(null, 401);
+            }
+        }
+
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });

@@ -1,4 +1,5 @@
 import MESSAGES from '@/config/message.js';
+import { Prisma } from '@/generated/client.js';
 import prisma from '@/utils/prisma.js';
 import { Hono } from 'hono';
 import type { JwtVariables } from 'hono/jwt';
@@ -54,7 +55,13 @@ app.post('/', async (c) => {
             },
             200
         );
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                return c.json({ success: false, error: MESSAGES.avatarInvalid }, 400);
+            }
+        }
+
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });

@@ -1,4 +1,7 @@
+import CONST from '@/config/const.js';
 import MESSAGES from '@/config/message.js';
+import { Prisma } from '@/generated/client.js';
+import type { AdminSelect } from '@/generated/models.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
 import { compare } from 'bcrypt';
@@ -7,9 +10,13 @@ import { sign, type JwtVariables } from 'hono/jwt';
 import { z } from 'zod';
 
 const loginSchema = z.object({
-    username: z.string(),
-    password: z.string()
+    username: z.string().min(CONST.USERNAME_MIN_LENGTH, MESSAGES.invalidCredentials).max(CONST.USERNAME_MAX_LENGTH, MESSAGES.invalidCredentials),
+    password: z.string().min(CONST.PASSWORD_MIN_LENGTH, MESSAGES.invalidCredentials).max(CONST.PASSWORD_MAX_LENGTH, MESSAGES.invalidCredentials)
 });
+
+const authAdminSelect: AdminSelect = {
+    password: true
+};
 
 const app = new Hono<{ Variables: JwtVariables }>();
 
@@ -18,10 +25,11 @@ app.post('/', zValidator('json', loginSchema), async (c) => {
         const { username, password } = c.req.valid('json');
 
         const admin = await prisma.admin.findUnique({
-            where: { username }
+            where: { username },
+            select: authAdminSelect
         });
 
-        if (!admin?.password) {
+        if (!admin) {
             return c.json({ success: false, error: MESSAGES.invalidCredentials }, 401);
         }
 
@@ -43,7 +51,13 @@ app.post('/', zValidator('json', loginSchema), async (c) => {
             },
             200
         );
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                return c.json({ success: false, error: MESSAGES.invalidCredentials }, 401);
+            }
+        }
+
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });

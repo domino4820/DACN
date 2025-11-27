@@ -1,6 +1,7 @@
 import CONST from '@/config/const.js';
 import MESSAGES from '@/config/message.js';
 import { Prisma } from '@/generated/client.js';
+import type { UserSelect } from '@/generated/models.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
 import { compare } from 'bcrypt';
@@ -13,13 +14,13 @@ const loginSchema = z.object({
     password: z.string().min(CONST.PASSWORD_MIN_LENGTH, MESSAGES.invalidCredentials).max(CONST.PASSWORD_MAX_LENGTH, MESSAGES.invalidCredentials)
 });
 
-const authUserSelect: Prisma.UserSelect = {
+const authUserSelect: UserSelect = {
     password: true,
     is_banned: true,
     is_verified: true
 };
 
-const userInfoSelect: Prisma.UserSelect = {
+const userInfoSelect: UserSelect = {
     username: true,
     email: true,
     created_at: true,
@@ -94,7 +95,13 @@ app.post('/', zValidator('json', loginSchema), async (c) => {
             },
             200
         );
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                return c.json({ success: false, error: MESSAGES.invalidCredentials }, 401);
+            }
+        }
+
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });

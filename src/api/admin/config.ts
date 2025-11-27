@@ -1,4 +1,5 @@
 import MESSAGES from '@/config/message.js';
+import { Prisma } from '@/generated/client.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -33,7 +34,19 @@ app.get('/', async (c) => {
             success: true,
             data: config
         });
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                return c.json(
+                    {
+                        success: false,
+                        error: MESSAGES.nameExists
+                    },
+                    409
+                );
+            }
+        }
+
         return c.json(
             {
                 success: false,

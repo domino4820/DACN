@@ -1,10 +1,10 @@
 import MESSAGES from '@/config/message.js';
+import type { Prisma } from '@/generated/client.js';
+import type { RoadmapSelect } from '@/generated/models.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-
-const app = new Hono<{ Variables: { username: string } }>();
 
 const querySchema = z.object({
     page: z
@@ -17,6 +17,44 @@ const querySchema = z.object({
         .transform((val) => (val ? Number.parseInt(val) : 10)),
     topic: z.string().optional()
 });
+
+const roadmapListSelect: RoadmapSelect = {
+    id: true,
+    name: true,
+    description: true,
+    roadmap_topics: {
+        select: {
+            topic: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            }
+        }
+    },
+    _count: {
+        select: {
+            nodes: true,
+            user_paths: true
+        }
+    }
+};
+
+const roadmapDetailInclude: NonNullable<Prisma.RoadmapFindUniqueArgs['include']> = {
+    roadmap_topics: {
+        include: {
+            topic: true
+        }
+    },
+    nodes: {
+        orderBy: {
+            label: 'asc'
+        }
+    },
+    edges: true
+};
+
+const app = new Hono<{ Variables: { username: string } }>();
 
 app.get('/', zValidator('query', querySchema), async (c) => {
     try {
@@ -53,27 +91,7 @@ app.get('/', zValidator('query', querySchema), async (c) => {
 
         const roadmaps = await prisma.roadmap.findMany({
             where,
-            select: {
-                id: true,
-                name: true,
-                description: true,
-                roadmap_topics: {
-                    select: {
-                        topic: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        }
-                    }
-                },
-                _count: {
-                    select: {
-                        nodes: true,
-                        user_paths: true
-                    }
-                }
-            },
+            select: roadmapListSelect,
             orderBy: {
                 name: 'asc'
             },
@@ -85,17 +103,21 @@ app.get('/', zValidator('query', querySchema), async (c) => {
         const hasNextPage = page < totalPages;
         const hasPrevPage = page > 1;
 
-        return c.json({
-            data: roadmaps,
-            pagination: {
-                currentPage: page,
-                totalPages,
-                totalCount,
-                limit,
-                hasNextPage,
-                hasPrevPage
-            }
-        });
+        return c.json(
+            {
+                success: true,
+                data: roadmaps,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalCount,
+                    limit,
+                    hasNextPage,
+                    hasPrevPage
+                }
+            },
+            200
+        );
     } catch {
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
@@ -107,34 +129,20 @@ app.get('/:id', async (c) => {
 
         const roadmap = await prisma.roadmap.findUnique({
             where: { id },
-            include: {
-                roadmap_topics: {
-                    include: {
-                        topic: true
-                    }
-                },
-                nodes: {
-                    orderBy: {
-                        label: 'asc'
-                    }
-                },
-                edges: true
-            }
+            include: roadmapDetailInclude
         });
 
         if (!roadmap) {
-            return c.json(
-                {
-                    success: false
-                },
-                404
-            );
+            return c.json({ success: false }, 404);
         }
 
-        return c.json({
-            success: true,
-            data: roadmap
-        });
+        return c.json(
+            {
+                success: true,
+                data: roadmap
+            },
+            200
+        );
     } catch {
         return c.json(
             {

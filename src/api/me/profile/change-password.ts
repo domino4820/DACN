@@ -1,4 +1,5 @@
 import MESSAGES from '@/config/message.js';
+import { Prisma } from '@/generated/client.js';
 import prisma from '@/utils/prisma.js';
 import { zValidator } from '@hono/zod-validator';
 import { compare, hash } from 'bcrypt';
@@ -53,7 +54,13 @@ app.patch('/', zValidator('json', changePasswordSchema), async (c) => {
             },
             200
         );
-    } catch {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                return c.json({ success: false, error: MESSAGES.passwordMismatch }, 400);
+            }
+        }
+
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });
