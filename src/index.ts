@@ -17,6 +17,8 @@ import prisma from '@/utils/prisma.js';
 const app = new Hono();
 
 app.use('/uploads/*', serveStatic({ root: './' }));
+app.use('/static/*', serveStatic({ root: './static' }));
+app.use('/favicon.ico', serveStatic({ path: './static/favicon.ico' }));
 
 const api = new Hono().basePath('/api');
 
@@ -28,6 +30,8 @@ api.route('/me', meApi);
 
 api.route('/', publicApi);
 app.route('/', api);
+
+app.get('*', serveStatic({ path: './static/index.html' }));
 
 const io = new Server();
 const jwtSecret = process.env.JWT_SECRET || '';

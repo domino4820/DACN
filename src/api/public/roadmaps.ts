@@ -118,7 +118,8 @@ app.get('/', zValidator('query', querySchema), async (c) => {
             },
             200
         );
-    } catch {
+    } catch (error) {
+        console.log('roadmaps list error:', error);
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });
@@ -143,7 +144,8 @@ app.get('/:id', async (c) => {
             },
             200
         );
-    } catch {
+    } catch (error) {
+        console.log('roadmap detail error:', error);
         return c.json(
             {
                 success: false,

@@ -1,0 +1,36 @@
+{
+  "allFiles": [
+    "/static/css/index-ad4a8b8687a37c4e.css",
+    "/static/js/index-ad4a8b8687a37c4e.js",
+    "/static/js/lib-react-ad4a8b8687a37c4e.js",
+    "/static/js/lib-router-ad4a8b8687a37c4e.js",
+    "/static/js/lib-axios-ad4a8b8687a37c4e.js",
+    "/static/js/379-ad4a8b8687a37c4e.js",
+    "/static/image/logo-transparent.dd3214d0.png",
+    "/favicon.ico",
+    "/index.html"
+  ],
+  "entries": {
+    "index": {
+      "assets": [
+        "static/image/logo-transparent.dd3214d0.png"
+      ],
+      "html": [
+        "/index.html"
+      ],
+      "initial": {
+        "js": [
+          "/static/js/lib-react-ad4a8b8687a37c4e.js",
+          "/static/js/lib-router-ad4a8b8687a37c4e.js",
+          "/static/js/lib-axios-ad4a8b8687a37c4e.js",
+          "/static/js/379-ad4a8b8687a37c4e.js",
+          "/static/js/index-ad4a8b8687a37c4e.js"
+        ],
+        "css": [
+          "/static/css/index-ad4a8b8687a37c4e.css"
+        ]
+      }
+    }
+  },
+  "integrity": {}
+}
