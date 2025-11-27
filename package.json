@@ -14,7 +14,6 @@
         "axios": "1.13.2",
         "class-variance-authority": "0.7.1",
         "clsx": "2.1.1",
-        "inject-manifest-plugin": "0.6.5",
         "lottie-react": "2.4.1",
         "postcss": "8.5.6",
         "react": "19.2.0",
@@ -26,11 +25,6 @@
         "tailwindcss": "4.1.17",
         "url-join": "5.0.0",
         "uuid": "13.0.0",
-        "workbox-core": "7.4.0",
-        "workbox-expiration": "7.4.0",
-        "workbox-precaching": "7.4.0",
-        "workbox-routing": "7.4.0",
-        "workbox-strategies": "7.4.0",
         "zustand": "5.0.8"
     },
     "devDependencies": {
