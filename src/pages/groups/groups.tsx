@@ -102,7 +102,6 @@ const Groups: FC = () => {
 
     useEffect(() => {
         if (loadingRef.current) {
-            console.log(loadingRef.current.clientHeight);
             setHeight(loadingRef.current.clientHeight);
         }
     }, [loadingRef.current]);
