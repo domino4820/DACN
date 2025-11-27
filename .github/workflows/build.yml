@@ -1,0 +1,72 @@
+name: Build and Deploy
+
+on:
+    push:
+        branches:
+            - fe
+    workflow_dispatch:
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout fe branch
+              uses: actions/checkout@v6
+              with:
+                  ref: fe
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 'latest'
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '22'
+
+            - name: Install dependencies
+              run: |
+                  if [ -f "pnpm-lock.yaml" ]; then
+                    pnpm install --frozen-lockfile
+                  else
+                    pnpm install
+                  fi
+
+            - name: Build the application
+              run: pnpm build
+
+            - name: Verify static folder exists
+              run: |
+                  if [ ! -d "static" ]; then
+                    echo "static folder not found!";
+                    exit 1;
+                  fi
+
+            - name: Backup static files to parent directory
+              run: mkdir -p ../backup && cp -r static ../backup/
+
+            - name: Checkout main branch
+              uses: actions/checkout@v6
+              with:
+                  ref: main
+
+            - name: Remove old files
+              run: rm -rf static
+
+            - name: Restore static files from parent directory
+              run: cp -r ../backup/* ./
+
+            - name: Configure Git
+              run: |
+                  git config --global user.name "github-actions[bot]"
+                  git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            - name: Commit and push changes
+              run: |
+                  git add static
+                  git commit -m "chore: update new static files"
+                  git push origin main

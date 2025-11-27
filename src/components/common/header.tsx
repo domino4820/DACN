@@ -45,17 +45,23 @@ const Header = forwardRef<HTMLElement>((_props, ref) => {
 
                     <div className={`transition-all duration-700 ease-in-out ${isSearchFocused ? 'w-0 overflow-hidden opacity-0' : 'opacity-100'}`}>
                         <NavLinkGroup>
-                            <LinkBtn to={paths.blog} variant='gradient'>
-                                Blogs
-                            </LinkBtn>
+                            {isAuthenticated ? (
+                                <>
+                                    <LinkBtn to={paths.quizzes} variant='gradient'>
+                                        Quizzes
+                                    </LinkBtn>
+                                    <LinkBtn to={paths.groups} variant='gradient'>
+                                        Groups
+                                    </LinkBtn>
+                                </>
+                            ) : (
+                                <></>
+                            )}
                             <LinkBtn to={paths.roadmaps} variant='gradient'>
                                 Roadmaps
                             </LinkBtn>
-                            <LinkBtn to={paths.quizzes} variant='gradient'>
-                                Quizzes
-                            </LinkBtn>
-                            <LinkBtn to={paths.groups} variant='gradient'>
-                                Groups
+                            <LinkBtn to={paths.blog} variant='gradient'>
+                                Blogs
                             </LinkBtn>
                         </NavLinkGroup>
                     </div>
