@@ -6,15 +6,15 @@
         "@hono/swagger-ui": "0.5.2",
         "@hono/zod-openapi": "1.1.5",
         "@hono/zod-validator": "0.7.5",
-        "@prisma/adapter-pg": "7.0.0",
-        "@prisma/client": "7.0.0",
+        "@prisma/adapter-pg": "7.0.1",
+        "@prisma/client": "7.0.1",
         "bcrypt": "6.0.0",
         "dotenv": "17.2.3",
-        "hono": "4.10.6",
+        "hono": "4.10.7",
         "mjml": "4.17.1",
         "resend": "6.5.2",
         "socket.io": "4.8.1",
-        "zod": "4.1.12"
+        "zod": "4.1.13"
     },
     "devDependencies": {
         "@commitlint/cli": "20.1.0",
@@ -27,7 +27,7 @@
         "lint-staged": "16.2.7",
         "prettier": "3.6.2",
         "prettier-plugin-organize-imports": "4.3.0",
-        "prisma": "7.0.0",
+        "prisma": "7.0.1",
         "tsc-alias": "1.8.16",
         "tsx": "4.20.6",
         "typescript": "5.9.3"
