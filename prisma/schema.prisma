@@ -45,7 +45,6 @@ model User {
   completed_nodes       UserNodeCompletion[]
   group_memberships     GroupMember[]
   group_messages        GroupMessage[]
-  group_message_replies GroupMessageReply[]
   created_quizzes       Quiz[]               @relation("QuizCreator")
   quiz_answers          QuizAnswer[]
   user_posts            UserPost[]
@@ -172,34 +171,22 @@ model GroupMember {
 }
 
 model GroupMessage {
-  id         String   @id @default(uuid())
-  group_id   String
-  user_id    String
-  content    String
-  created_at DateTime @default(now()) @db.Timestamptz
+  id                String   @id @default(uuid())
+  group_id          String
+  user_id           String
+  reply_to_message_id String?
+  content           String
+  created_at        DateTime @default(now()) @db.Timestamptz
 
-  group   Group               @relation(fields: [group_id], references: [id], onDelete: Cascade)
-  user    User                @relation(fields: [user_id], references: [username], onDelete: Cascade)
-  replies GroupMessageReply[]
+  group           Group         @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  reply_to        GroupMessage? @relation("MessageReplies", fields: [reply_to_message_id], references: [id], onDelete: SetNull)
+  replies         GroupMessage[] @relation("MessageReplies")
 
   @@index([group_id, created_at(sort: Desc)])
+  @@index([reply_to_message_id])
   @@index([user_id])
   @@map("group_message")
-}
-
-model GroupMessageReply {
-  id         String   @id @default(uuid())
-  message_id String
-  user_id    String
-  content    String
-  created_at DateTime @default(now()) @db.Timestamptz
-
-  message GroupMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
-  user    User         @relation(fields: [user_id], references: [username], onDelete: Cascade)
-
-  @@index([message_id, created_at(sort: Desc)])
-  @@index([user_id])
-  @@map("group_message_reply")
 }
 
 model Topic {
