@@ -41,6 +41,9 @@ const Footer: FC = () => {
                         <div className='flex flex-col gap-2'>
                             <p className='text-xs font-semibold text-stone-800 uppercase dark:text-stone-200'>Tài nguyên</p>
                             <div className='flex flex-col gap-1'>
+                                <Link to={paths.blog} className='text-sm text-stone-600 transition-colors hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100'>
+                                    Blogs
+                                </Link>
                                 <Link to={paths.guides} className='text-sm text-stone-600 transition-colors hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100'>
                                     Hướng dẫn
                                 </Link>
@@ -65,7 +68,10 @@ const Footer: FC = () => {
                             <div className='flex items-center gap-1 text-xs text-stone-600 dark:text-stone-400'>
                                 <span>Made with</span>
                                 <FontAwesomeIcon icon={faHeart} className='text-xs text-red-500' />
-                                <span>by domino4820</span>
+                                <span>by</span>
+                                <a href='https://github.com/domino4820/' target='_blank' rel='noopener noreferrer' className='font-medium transition-colors hover:text-stone-900 dark:hover:text-stone-100'>
+                                    domino4820
+                                </a>
                             </div>
                         </div>
                     </div>

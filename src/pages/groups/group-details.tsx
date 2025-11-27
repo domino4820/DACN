@@ -1,5 +1,6 @@
 import LoadingImage from '@/assets/lottie/loading.json';
 import Button from '@/components/ui/button';
+import Textarea from '@/components/ui/textarea';
 import apiEndpoints from '@/config/api-endpoints';
 import MESSAGES from '@/config/messages';
 import paths from '@/config/paths';
@@ -477,7 +478,7 @@ const GroupDetails: FC = () => {
                         </div>
                     )}
                     <form className='relative flex items-end gap-2' onSubmit={handleSendMessage}>
-                        <textarea
+                        <Textarea
                             ref={textareaRef}
                             value={message}
                             onChange={(e) => {

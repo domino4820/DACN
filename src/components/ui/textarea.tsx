@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { clsx } from 'clsx';
-import type { FC, TextareaHTMLAttributes } from 'react';
+import type { TextareaHTMLAttributes } from 'react';
+import { forwardRef } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 const textareaVariants = cva('w-full rounded-md border px-4 py-2.5 text-sm font-medium shadow-sm transition-all duration-300 ease-in focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50', {
@@ -20,10 +21,12 @@ interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>
     error?: boolean;
 }
 
-const Textarea: FC<TextareaProps> = ({ variant, className, error, ...props }) => {
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ variant, className, error, ...props }, ref) => {
     const textareaVariant = error ? 'error' : variant;
 
-    return <textarea className={twMerge(clsx(textareaVariants({ variant: textareaVariant }), className))} {...props} />;
-};
+    return <textarea ref={ref} className={twMerge(clsx(textareaVariants({ variant: textareaVariant }), className))} {...props} />;
+});
+
+Textarea.displayName = 'Textarea';
 
 export default Textarea;

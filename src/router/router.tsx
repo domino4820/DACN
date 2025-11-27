@@ -55,7 +55,7 @@ const router = createBrowserRouter([
                 )
             },
             {
-                path: paths.me,
+                path: paths.setting,
                 element: (
                     <ProtectedRoute>
                         <Profile />

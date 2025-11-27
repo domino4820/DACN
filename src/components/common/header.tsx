@@ -6,7 +6,7 @@ import LinkBtn from '@/components/ui/link-btn';
 import NavLinkGroup from '@/components/ui/nav-link-group';
 import paths from '@/config/paths';
 import { useAuthStore } from '@/store/auth.store';
-import { faMagnifyingGlass, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faGear, faMagnifyingGlass, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { forwardRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -45,13 +45,16 @@ const Header = forwardRef<HTMLElement>((_props, ref) => {
 
                     <div className={`transition-all duration-700 ease-in-out ${isSearchFocused ? 'w-0 overflow-hidden opacity-0' : 'opacity-100'}`}>
                         <NavLinkGroup>
-                            <LinkBtn to='/roadmaps' variant='gradient'>
+                            <LinkBtn to={paths.blog} variant='gradient'>
+                                Blogs
+                            </LinkBtn>
+                            <LinkBtn to={paths.roadmaps} variant='gradient'>
                                 Roadmaps
                             </LinkBtn>
-                            <LinkBtn to='/quizzes' variant='gradient'>
+                            <LinkBtn to={paths.quizzes} variant='gradient'>
                                 Quizzes
                             </LinkBtn>
-                            <LinkBtn to='/groups' variant='gradient'>
+                            <LinkBtn to={paths.groups} variant='gradient'>
                                 Groups
                             </LinkBtn>
                         </NavLinkGroup>
@@ -74,9 +77,20 @@ const Header = forwardRef<HTMLElement>((_props, ref) => {
                                 triggerClassName='p-2'
                                 menuClassName='min-w-48'
                             >
-                                <DropdownItem onClick={() => navigate(paths.me)} className='flex items-center gap-2'>
+                                <DropdownItem
+                                    onClick={() => {
+                                        if (user?.username) {
+                                            navigate(`/profile/${user.username}`);
+                                        }
+                                    }}
+                                    className='flex items-center gap-2'
+                                >
                                     <FontAwesomeIcon icon={faUser} className='text-stone-600 dark:text-stone-400' />
                                     <span>Trang cá nhân</span>
+                                </DropdownItem>
+                                <DropdownItem onClick={() => navigate(paths.setting)} className='flex items-center gap-2'>
+                                    <FontAwesomeIcon icon={faGear} className='text-stone-600 dark:text-stone-400' />
+                                    <span>Setting</span>
                                 </DropdownItem>
                                 <DropdownItem onClick={handleLogout} variant='danger' className='flex items-center gap-2'>
                                     <FontAwesomeIcon icon={faRightFromBracket} className='text-red-600 dark:text-red-400' />
