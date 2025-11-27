@@ -76,7 +76,11 @@ const router = createBrowserRouter([
             },
             {
                 path: paths.groupDetails,
-                element: <GroupDetails />
+                element: (
+                    <ProtectedRoute>
+                        <GroupDetails />
+                    </ProtectedRoute>
+                )
             },
             {
                 path: paths.notFound,

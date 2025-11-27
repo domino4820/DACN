@@ -2,6 +2,7 @@ import LoadingImage from '@/assets/lottie/loading.json';
 import RoadmapFlow from '@/components/common/roadmap-flow';
 import apiEndpoints from '@/config/api-endpoints';
 import MESSAGES from '@/config/messages';
+import paths from '@/config/paths';
 import api from '@/utils/api';
 import type { Edge, Node } from '@xyflow/react';
 import { isAxiosError } from 'axios';
@@ -116,7 +117,7 @@ const RoadmapDetail: FC = () => {
                 setEdges(flowEdges);
             } else {
                 toast.error(response.data.error || MESSAGES.internalServerError);
-                navigate('/roadmaps');
+                navigate(paths.roadmaps);
             }
         } catch (err) {
             if (isAxiosError(err)) {
@@ -124,7 +125,7 @@ const RoadmapDetail: FC = () => {
             } else {
                 toast.error(MESSAGES.internalServerError);
             }
-            navigate('/roadmaps');
+            navigate(paths.roadmaps);
         } finally {
             setLoading(false);
         }
@@ -135,7 +136,7 @@ const RoadmapDetail: FC = () => {
     }, [id]);
 
     const handleBackToList = () => {
-        navigate('/roadmaps');
+        navigate(paths.roadmaps);
     };
 
     if (loading) {

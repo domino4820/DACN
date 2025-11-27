@@ -311,7 +311,7 @@ const Groups: FC = () => {
                 <div className='animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm duration-200'>
                     <div className='w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-stone-800'>
                         <div className='mb-4 flex items-center justify-between'>
-                            <h3 className='text-xl font-bold text-stone-900 dark:text-stone-100'>Tạo nhóm mới</h3>
+                            <p className='text-xl font-bold text-stone-900 dark:text-stone-100'>Tạo nhóm mới</p>
                             <button onClick={() => setIsCreateModalOpen(false)} className='text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200'>
                                 <FontAwesomeIcon icon={faXmark} className='text-xl' />
                             </button>
