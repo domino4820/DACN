@@ -45,24 +45,24 @@ const Header = forwardRef<HTMLElement>((_props, ref) => {
 
                     <div className={`transition-all duration-700 ease-in-out ${isSearchFocused ? 'w-0 overflow-hidden opacity-0' : 'opacity-100'}`}>
                         <NavLinkGroup>
-                            {isAuthenticated ? (
-                                <>
-                                    <LinkBtn to={paths.quizzes} variant='gradient'>
-                                        Quizzes
-                                    </LinkBtn>
-                                    <LinkBtn to={paths.groups} variant='gradient'>
-                                        Groups
-                                    </LinkBtn>
-                                </>
-                            ) : (
-                                <></>
-                            )}
-                            <LinkBtn to={paths.roadmaps} variant='gradient'>
-                                Roadmaps
-                            </LinkBtn>
-                            <LinkBtn to={paths.blog} variant='gradient'>
-                                Blogs
-                            </LinkBtn>
+                            {[
+                                ...(isAuthenticated
+                                    ? [
+                                          <LinkBtn key='quizzes' to={paths.quizzes} variant='gradient'>
+                                              Quizzes
+                                          </LinkBtn>,
+                                          <LinkBtn key='groups' to={paths.groups} variant='gradient'>
+                                              Groups
+                                          </LinkBtn>
+                                      ]
+                                    : []),
+                                <LinkBtn key='roadmaps' to={paths.roadmaps} variant='gradient'>
+                                    Roadmaps
+                                </LinkBtn>,
+                                <LinkBtn key='blog' to={paths.blog} variant='gradient'>
+                                    Blogs
+                                </LinkBtn>
+                            ]}
                         </NavLinkGroup>
                     </div>
                     <div className='ml-2 flex items-center justify-end gap-2'>
