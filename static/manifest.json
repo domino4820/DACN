@@ -1,14 +1,36 @@
 {
-    "allFiles": ["/static/css/index-510de3305da0e6f4.css", "/static/js/index-510de3305da0e6f4.js", "/static/js/lib-react-510de3305da0e6f4.js", "/static/js/lib-router-510de3305da0e6f4.js", "/static/js/lib-axios-510de3305da0e6f4.js", "/static/js/864-510de3305da0e6f4.js", "/static/image/logo-transparent.dd3214d0.png", "/favicon.ico", "/index.html"],
-    "entries": {
-        "index": {
-            "assets": ["static/image/logo-transparent.dd3214d0.png"],
-            "html": ["/index.html"],
-            "initial": {
-                "js": ["/static/js/lib-react-510de3305da0e6f4.js", "/static/js/lib-router-510de3305da0e6f4.js", "/static/js/lib-axios-510de3305da0e6f4.js", "/static/js/864-510de3305da0e6f4.js", "/static/js/index-510de3305da0e6f4.js"],
-                "css": ["/static/css/index-510de3305da0e6f4.css"]
-            }
-        }
-    },
-    "integrity": {}
+  "allFiles": [
+    "/static/css/index-cb64b1b1adde591f.css",
+    "/static/js/index-cb64b1b1adde591f.js",
+    "/static/js/lib-react-cb64b1b1adde591f.js",
+    "/static/js/lib-router-cb64b1b1adde591f.js",
+    "/static/js/lib-axios-cb64b1b1adde591f.js",
+    "/static/js/379-cb64b1b1adde591f.js",
+    "/static/image/logo-transparent.dd3214d0.png",
+    "/favicon.ico",
+    "/index.html"
+  ],
+  "entries": {
+    "index": {
+      "assets": [
+        "static/image/logo-transparent.dd3214d0.png"
+      ],
+      "html": [
+        "/index.html"
+      ],
+      "initial": {
+        "js": [
+          "/static/js/lib-react-cb64b1b1adde591f.js",
+          "/static/js/lib-router-cb64b1b1adde591f.js",
+          "/static/js/lib-axios-cb64b1b1adde591f.js",
+          "/static/js/379-cb64b1b1adde591f.js",
+          "/static/js/index-cb64b1b1adde591f.js"
+        ],
+        "css": [
+          "/static/css/index-cb64b1b1adde591f.css"
+        ]
+      }
+    }
+  },
+  "integrity": {}
 }
