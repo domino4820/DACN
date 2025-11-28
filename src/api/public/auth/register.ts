@@ -38,7 +38,7 @@ app.post('/', zValidator('json', registerSchema), async (c) => {
             return c.json({ success: false, error: `${MESSAGES.userExists.replace('<username>', username).replace('<email>', email)}` }, 400);
         }
 
-        const saltRounds = Number.parseInt(process.env.SALT_ROUNDS || '10');
+        const saltRounds = 10;
         const hashedPassword = await hash(password, saltRounds);
 
         const newOtp = Math.floor(1000 + Math.random() * 9000).toString();

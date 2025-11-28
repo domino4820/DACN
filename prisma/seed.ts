@@ -2,7 +2,7 @@ import prisma from '@/utils/prisma.js';
 import { hash } from 'bcrypt';
 
 const main = async () => {
-    const hashedPassword = await hash('admin', 10);
+    const hashedPassword = await hash('admin123', 10);
     const admin = await prisma.admin.upsert({
         where: { username: 'admin' },
         update: {

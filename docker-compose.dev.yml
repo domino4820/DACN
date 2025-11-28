@@ -17,29 +17,7 @@ services:
             retries: 20
         volumes:
             - postgres_data:/var/lib/postgresql/data
-        networks:
-            - dacn-network
         command: postgres -c listen_addresses='*'
-
-    dacn:
-        image: domino4820/dacn:latest
-        depends_on:
-            postgres_db:
-                condition: service_healthy
-        environment:
-            DOMAIN: eroadmap.tech
-            JWT_EXPIRES_IN: 86400000
-            JWT_SECRET: 'CON-MEO-XAU'
-            DATABASE_URL: 'postgresql://postgres:postgres@postgres_db:5432/dacn?schema=public'
-        ports:
-            - '80:3000'
-        stdin_open: true
-        tty: true
-        networks:
-            - dacn-network
 
 volumes:
     postgres_data:
-
-networks:
-    dacn-network:

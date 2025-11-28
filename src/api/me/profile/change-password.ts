@@ -40,7 +40,7 @@ app.patch('/', zValidator('json', changePasswordSchema), async (c) => {
             return c.json({ success: false, error: MESSAGES.passwordMismatch }, 400);
         }
 
-        const saltRounds = Number.parseInt(process.env.SALT_ROUNDS || '10');
+        const saltRounds = 10;
         const hashedNewPassword = await hash(newPassword, saltRounds);
 
         await prisma.user.update({

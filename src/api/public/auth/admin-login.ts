@@ -40,7 +40,7 @@ app.post('/', zValidator('json', loginSchema), async (c) => {
         }
 
         const now = Math.floor(Date.now() / 1000);
-        const exp = now + Number(process.env.JWT_EXPIRES_IN || 86400);
+        const exp = now + Number(process.env.JWT_EXPIRES_IN || 86400000);
 
         const token = await sign({ sub: 'CON-CA-SAU', exp, iat: now }, process.env.JWT_SECRET, 'HS256');
 
