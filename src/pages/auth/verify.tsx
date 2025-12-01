@@ -32,7 +32,6 @@ interface VerifyResponse {
                 github: string | null;
             } | null;
             stats: {
-                level: number;
                 xp: number;
             } | null;
         };

@@ -9,6 +9,7 @@ const paths = {
     notFound: '*',
     setting: '/setting',
     quizzes: '/quizzes',
+    quizDetail: '/quizzes/:id',
     register: '/register',
     roadmaps: '/roadmaps',
     roadmapDetail: '/roadmaps/:id',

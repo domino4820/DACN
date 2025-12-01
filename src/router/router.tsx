@@ -2,19 +2,21 @@ import paths from '@/config/paths';
 import AdminLayout from '@/layout/admin-layout';
 import ClientLayout from '@/layout/client-layout';
 import AdminLogin from '@/pages/admin/admin-login';
-import Config from '@/pages/admin/config.tsx';
-import Quizzes from '@/pages/admin/quizzes.tsx';
-import Roadmaps from '@/pages/admin/roadmaps.tsx';
-import Topics from '@/pages/admin/topics.tsx';
-import Users from '@/pages/admin/users.tsx';
+import Config from '@/pages/admin/config';
+import AdminQuizzes from '@/pages/admin/quizzes';
+import Roadmaps from '@/pages/admin/roadmaps';
+import Topics from '@/pages/admin/topics';
+import Users from '@/pages/admin/users';
 import Login from '@/pages/auth/login';
 import Register from '@/pages/auth/register';
 import Verify from '@/pages/auth/verify';
-import GroupDetails from '@/pages/groups/group-details.tsx';
-import Groups from '@/pages/groups/groups.tsx';
+import GroupDetails from '@/pages/groups/group-details';
+import Groups from '@/pages/groups/groups';
 import Index from '@/pages/index';
 import Profile from '@/pages/me/profile';
 import NotFound from '@/pages/not-found';
+import QuizDetail from '@/pages/quizzes/quiz-detail';
+import Quizzes from '@/pages/quizzes/quizzes';
 import Roadmap from '@/pages/roadmaps/roadmap';
 import RoadmapDetail from '@/pages/roadmaps/roadmap-detail';
 import ProtectedRoute from '@/router/protected-route';
@@ -83,6 +85,22 @@ const router = createBrowserRouter([
                 )
             },
             {
+                path: paths.quizzes,
+                element: (
+                    <ProtectedRoute>
+                        <Quizzes />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: paths.quizDetail,
+                element: (
+                    <ProtectedRoute>
+                        <QuizDetail />
+                    </ProtectedRoute>
+                )
+            },
+            {
                 path: paths.notFound,
                 element: <NotFound />
             }
@@ -92,7 +110,7 @@ const router = createBrowserRouter([
         path: paths.admin.root,
         element: <AdminLayout />,
         children: [
-            { index: true, element: <Quizzes /> },
+            { index: true, element: <AdminQuizzes /> },
             { path: paths.admin.config, element: <Config /> },
             { path: paths.admin.login, element: <AdminLogin /> },
             { path: paths.admin.roadmaps, element: <Roadmaps /> },

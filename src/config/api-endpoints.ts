@@ -15,12 +15,14 @@ const apiEndpoints = {
         updateVisibility: '/me/visibility',
         uploadAvatar: '/me/avatar',
         roadmaps: '/me/roadmap',
-        groups: '/me/groups'
+        groups: '/me/groups',
+        quizzes: '/me/quizzes'
     },
     admin: {
         config: '/admin/config',
         topics: '/admin/topics',
-        roadmap: '/admin/roadmap'
+        roadmap: '/admin/roadmap',
+        quizzes: '/admin/quizzes'
     }
 };
 

@@ -13,7 +13,6 @@ interface UserProfile {
 }
 
 interface UserStats {
-    level: number;
     xp: number;
 }
 

@@ -244,11 +244,7 @@ const Profile: FC = () => {
             <div className='flex w-full max-w-4xl flex-1 gap-4'>
                 <div className='flex w-1/2 flex-col justify-start'>
                     {user.stats && (
-                        <div className='mb-4 grid grid-cols-2 gap-4 rounded-lg bg-stone-50 p-4 dark:bg-stone-900'>
-                            <div className='text-center'>
-                                <div className='mb-1 text-2xl font-bold text-stone-900 dark:text-stone-100'>{user.stats.level}</div>
-                                <div className='text-xs text-stone-600 dark:text-stone-400'>Level</div>
-                            </div>
+                        <div className='mb-4 rounded-lg bg-stone-50 p-4 dark:bg-stone-900'>
                             <div className='text-center'>
                                 <div className='mb-1 text-2xl font-bold text-stone-900 dark:text-stone-100'>{user.stats.xp}</div>
                                 <div className='text-xs text-stone-600 dark:text-stone-400'>EXP</div>

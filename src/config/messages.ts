@@ -11,6 +11,9 @@ const MESSAGES = {
     groupNotFound: 'Nhóm không tồn tại',
     groupAlreadyJoined: 'Bạn đã tham gia nhóm này',
     groupNotMember: 'Bạn chưa tham gia nhóm này',
-    groupOwnerMustTransfer: 'Owner phải chuyển quyền trước khi rời nhóm'
+    groupOwnerMustTransfer: 'Owner phải chuyển quyền trước khi rời nhóm',
+    quizNotFound: 'Quiz không tồn tại',
+    optionNotFound: 'Option không tồn tại',
+    quizAlreadyAnswered: 'Bạn đã trả lời quiz này rồi'
 };
 export default MESSAGES;
