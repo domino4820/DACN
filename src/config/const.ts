@@ -3,6 +3,7 @@ const CONST = {
     USERNAME_MAX_LENGTH: 16,
     PASSWORD_MIN_LENGTH: 6,
     PASSWORD_MAX_LENGTH: 16,
-    OTP_LENGTH: 4
+    OTP_LENGTH: 4,
+    QUIZ_XP_REWARD: 10
 };
 export default CONST;

@@ -20,11 +20,6 @@ enum GroupMemberRole {
   MEMBER
 }
 
-enum QuizStatus {
-  PENDING
-  APPROVED
-}
-
 enum NodeLevel {
   REQUIRED
   OPTIONAL
@@ -39,18 +34,17 @@ model User {
   otp         String?
   created_at  DateTime @default(now()) @db.Timestamptz
 
-  profile               UserProfile?
-  stats                 UserStats?
-  paths                 UserPath[]
-  completed_nodes       UserNodeCompletion[]
-  group_memberships     GroupMember[]
-  group_messages        GroupMessage[]
-  created_quizzes       Quiz[]               @relation("QuizCreator")
-  quiz_answers          QuizAnswer[]
-  user_posts            UserPost[]
-  user_post_likes       UserPostLike[]
-  user_post_comments    UserPostComment[]
-  roadmap_comments      RoadmapComment[]
+  profile            UserProfile?
+  stats              UserStats?
+  paths              UserPath[]
+  completed_nodes    UserNodeCompletion[]
+  group_memberships  GroupMember[]
+  group_messages     GroupMessage[]
+  quiz_answers       QuizAnswer[]
+  user_posts         UserPost[]
+  user_post_likes    UserPostLike[]
+  user_post_comments UserPostComment[]
+  roadmap_comments   RoadmapComment[]
 
   @@index([created_at(sort: Desc)])
   @@map("user")
@@ -72,7 +66,6 @@ model UserProfile {
 
 model UserStats {
   username String @id
-  level    Int    @default(1)
   xp       Int    @default(0)
 
   user User @relation(fields: [username], references: [username], onDelete: Cascade)
@@ -171,17 +164,17 @@ model GroupMember {
 }
 
 model GroupMessage {
-  id                String   @id @default(uuid())
-  group_id          String
-  user_id           String
+  id                  String   @id @default(uuid())
+  group_id            String
+  user_id             String
   reply_to_message_id String?
-  content           String
-  created_at        DateTime @default(now()) @db.Timestamptz
+  content             String
+  created_at          DateTime @default(now()) @db.Timestamptz
 
-  group           Group         @relation(fields: [group_id], references: [id], onDelete: Cascade)
-  user            User          @relation(fields: [user_id], references: [username], onDelete: Cascade)
-  reply_to        GroupMessage? @relation("MessageReplies", fields: [reply_to_message_id], references: [id], onDelete: SetNull)
-  replies         GroupMessage[] @relation("MessageReplies")
+  group    Group          @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  reply_to GroupMessage?  @relation("MessageReplies", fields: [reply_to_message_id], references: [id], onDelete: SetNull)
+  replies  GroupMessage[] @relation("MessageReplies")
 
   @@index([group_id, created_at(sort: Desc)])
   @@index([reply_to_message_id])
@@ -195,6 +188,7 @@ model Topic {
   created_at DateTime @default(now()) @db.Timestamptz
 
   roadmap_topics RoadmapTopic[]
+  quizzes        Quiz[]
 
   @@index([name])
   @@map("topic")
@@ -261,69 +255,6 @@ model RoadmapEdge {
   @@map("roadmap_edge")
 }
 
-model Quiz {
-  id          String     @id @default(uuid())
-  label       String
-  description String?
-  creator_id  String
-  status      QuizStatus @default(PENDING)
-
-  creator   User           @relation("QuizCreator", fields: [creator_id], references: [username], onDelete: Cascade)
-  questions QuizQuestion[]
-  answers   QuizAnswer[]
-
-  @@index([creator_id])
-  @@index([status])
-  @@map("quiz")
-}
-
-model QuizQuestion {
-  id                String  @id @default(uuid())
-  quiz_id           String
-  content           String
-  correct_option_id String?
-  explanation       String?
-  order             Int
-
-  quiz           Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
-  options        QuizOption[] @relation("QuestionOptions")
-  correct_option QuizOption?  @relation("CorrectOption", fields: [correct_option_id], references: [id], onDelete: Restrict)
-  answers        QuizAnswer[]
-
-  @@map("quiz_question")
-}
-
-model QuizOption {
-  id          String  @id @default(uuid())
-  question_id String
-  content     String
-  is_correct  Boolean @default(false)
-
-  question            QuizQuestion   @relation("QuestionOptions", fields: [question_id], references: [id], onDelete: Cascade)
-  correct_for         QuizQuestion[] @relation("CorrectOption")
-  selected_in_answers QuizAnswer[]
-
-  @@map("quiz_option")
-}
-
-model QuizAnswer {
-  id                 String   @id @default(uuid())
-  quiz_id            String
-  user_id            String
-  question_id        String
-  selected_option_id String
-  created_at         DateTime @default(now()) @db.Timestamptz
-
-  quiz            Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
-  user            User         @relation(fields: [user_id], references: [username], onDelete: Cascade)
-  question        QuizQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
-  selected_option QuizOption   @relation(fields: [selected_option_id], references: [id], onDelete: Cascade)
-
-  @@unique([quiz_id, user_id, question_id])
-  @@index([user_id, created_at(sort: Desc)])
-  @@map("quiz_answer")
-}
-
 model RoadmapComment {
   id         String   @id @default(uuid())
   roadmap_id String
@@ -337,6 +268,53 @@ model RoadmapComment {
   @@index([roadmap_id, created_at(sort: Desc)])
   @@index([user_id])
   @@map("roadmap_comment")
+}
+
+model Quiz {
+  id                String  @id @default(uuid())
+  label             String
+  content           String
+  correct_option_id String?
+  topic_id          String
+
+  topic          Topic        @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+  correct_option QuizOption?  @relation("CorrectOption", fields: [correct_option_id], references: [id], onDelete: Restrict)
+  options        QuizOption[] @relation("QuizOptions")
+  answers        QuizAnswer[]
+
+  @@index([topic_id])
+  @@map("quiz")
+}
+
+model QuizOption {
+  id         String  @id @default(uuid())
+  quiz_id    String
+  content    String
+  is_correct Boolean @default(false)
+
+  quiz                Quiz         @relation("QuizOptions", fields: [quiz_id], references: [id], onDelete: Cascade)
+  correct_for         Quiz[]       @relation("CorrectOption")
+  selected_in_answers QuizAnswer[]
+
+  @@index([quiz_id])
+  @@map("quiz_option")
+}
+
+model QuizAnswer {
+  id                 String   @id @default(uuid())
+  quiz_id            String
+  user_id            String
+  selected_option_id String
+  created_at         DateTime @default(now()) @db.Timestamptz
+
+  quiz            Quiz       @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  user            User       @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  selected_option QuizOption @relation(fields: [selected_option_id], references: [id], onDelete: Cascade)
+
+  @@unique([quiz_id, user_id])
+  @@index([user_id, created_at(sort: Desc)])
+  @@index([quiz_id])
+  @@map("quiz_answer")
 }
 
 model Admin {

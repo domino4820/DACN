@@ -37,7 +37,6 @@ const userInfoSelect: UserSelect = {
     },
     stats: {
         select: {
-            level: true,
             xp: true
         }
     }

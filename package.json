@@ -41,7 +41,6 @@
     "scripts": {
         "build": "tsc && tsc-alias",
         "build:image": "docker build -t domino4820/dacn:latest . && docker save -o dacn.tar domino4820/dacn:latest",
-        "db:studio": "prisma studio",
         "dev": "tsx watch src/index.ts",
         "format": "prettier --write .",
         "prepare": "husky",

@@ -38,7 +38,6 @@ app.get('/', async (c) => {
                 },
                 stats: {
                     select: {
-                        level: true,
                         xp: true
                     }
                 }
