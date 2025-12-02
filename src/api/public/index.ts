@@ -1,6 +1,7 @@
 import groups from '@/api/public/groups.js';
 import roadmaps from '@/api/public/roadmaps.js';
 import topics from '@/api/public/topics.js';
+import users from '@/api/public/users.js';
 import { Hono } from 'hono';
 const app = new Hono();
 
@@ -16,4 +17,5 @@ app.route('/verify', verify);
 app.route('/roadmaps', roadmaps);
 app.route('/topics', topics);
 app.route('/groups', groups);
+app.route('/users', users);
 export default app;

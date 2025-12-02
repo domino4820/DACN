@@ -35,11 +35,6 @@ app.get('/', async (c) => {
                         facebook: true,
                         github: true
                     }
-                },
-                stats: {
-                    select: {
-                        xp: true
-                    }
                 }
             }
         });

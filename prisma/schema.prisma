@@ -34,17 +34,16 @@ model User {
   otp         String?
   created_at  DateTime @default(now()) @db.Timestamptz
 
-  profile            UserProfile?
-  stats              UserStats?
-  paths              UserPath[]
-  completed_nodes    UserNodeCompletion[]
-  group_memberships  GroupMember[]
-  group_messages     GroupMessage[]
-  quiz_answers       QuizAnswer[]
-  user_posts         UserPost[]
-  user_post_likes    UserPostLike[]
-  user_post_comments UserPostComment[]
-  roadmap_comments   RoadmapComment[]
+  profile           UserProfile?
+  stats             UserStats?
+  paths             UserPath[]
+  completed_nodes   UserNodeCompletion[]
+  group_memberships GroupMember[]
+  group_messages    GroupMessage[]
+  quiz_answers      QuizAnswer[]
+  posts             Post[]
+  post_comments     PostComment[]
+  roadmap_comments  RoadmapComment[]
 
   @@index([created_at(sort: Desc)])
   @@map("user")
@@ -102,46 +101,35 @@ model UserNodeCompletion {
   @@map("user_node_completion")
 }
 
-model UserPost {
+model Post {
   id         String   @id @default(uuid())
   user_id    String
+  title      String
   content    String
-  image_url  String?
   created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @updatedAt @db.Timestamptz
 
-  user     User              @relation(fields: [user_id], references: [username], onDelete: Cascade)
-  likes    UserPostLike[]
-  comments UserPostComment[]
+  user     User          @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  comments PostComment[]
 
   @@index([user_id, created_at(sort: Desc)])
-  @@map("user_post")
+  @@index([created_at(sort: Desc)])
+  @@map("post")
 }
 
-model UserPostLike {
-  post_id String
-  user_id String
-
-  post UserPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user User     @relation(fields: [user_id], references: [username], onDelete: Cascade)
-
-  @@id([post_id, user_id])
-  @@index([user_id])
-  @@map("user_post_like")
-}
-
-model UserPostComment {
+model PostComment {
   id         String   @id @default(uuid())
   post_id    String
   user_id    String
   content    String
   created_at DateTime @default(now()) @db.Timestamptz
 
-  post UserPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user User     @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [username], onDelete: Cascade)
 
   @@index([post_id, created_at(sort: Desc)])
   @@index([user_id])
-  @@map("user_post_comment")
+  @@map("post_comment")
 }
 
 model Group {
