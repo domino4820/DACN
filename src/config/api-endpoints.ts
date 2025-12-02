@@ -15,6 +15,10 @@ const apiEndpoints = {
         updateVisibility: '/me/visibility',
         uploadAvatar: '/me/avatar',
         roadmaps: '/me/roadmap',
+        roadmapComments: (roadmapId: string) => `/me/roadmaps/${roadmapId}/comments`,
+        roadmapComment: (commentId: string) => `/me/roadmaps/comments/${commentId}`,
+        roadmapNodeLearning: (roadmapId: string, nodeId: string) => `/me/roadmaps/${roadmapId}/nodes/${nodeId}/learning`,
+        roadmapNodeComplete: (roadmapId: string, nodeId: string) => `/me/roadmaps/${roadmapId}/nodes/${nodeId}/complete`,
         groups: '/me/groups',
         quizzes: '/me/quizzes'
     },

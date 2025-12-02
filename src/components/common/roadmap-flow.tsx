@@ -1,13 +1,19 @@
+import CompletedImage from '@/assets/lottie/completed.json';
+import LearningImage from '@/assets/lottie/learning.json';
 import Button from '@/components/admin/ui/button';
 import Input from '@/components/admin/ui/input';
 import Textarea from '@/components/admin/ui/textarea';
 import apiEndpoints from '@/config/api-endpoints';
+import { useAuthStore } from '@/store/auth.store';
 import api from '@/utils/api';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faBookOpen, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { addEdge, Background, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type Node, type OnConnectEnd } from '@xyflow/react';
-import type { FC } from 'react';
+import { addEdge, Background, Handle, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type Node, type NodeProps, type OnConnectEnd } from '@xyflow/react';
+import { isAxiosError } from 'axios';
+import Lottie from 'lottie-react';
+import type { FC, ReactNode } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 
 type RoadmapNodeData = {
@@ -41,9 +47,32 @@ type RoadmapData = {
     edges: RoadmapEdgeData[];
 };
 
+type UserProgress = {
+    currentNodeId: string | null;
+    currentNode: {
+        id: string;
+        label: string;
+    } | null;
+    completedNodeIds: string[];
+    progress: {
+        completed: number;
+        total: number;
+        percentage: number;
+    };
+};
+
+type CustomRoadmapNodeData = {
+    label: string;
+    content?: string;
+    level: 'REQUIRED' | 'OPTIONAL';
+    deletable: boolean;
+    isLearning?: boolean;
+    isCompleted?: boolean;
+};
+
 type RoadmapFlowProps = {
     name: string;
-    description: string;
+    description: string | null;
     topicIds: string[];
     onSave: (data: { name: string; description: string; topicIds: string[]; nodes: Node[]; edges: Edge[] }) => void;
     onCancel: () => void;
@@ -51,9 +80,12 @@ type RoadmapFlowProps = {
     viewOnly?: boolean;
     nodes?: Node[];
     edges?: Edge[];
+    headerActions?: ReactNode;
+    userProgress?: UserProgress;
+    onNodeStatusChange?: () => void;
 };
 
-const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave, onCancel, roadmapId, viewOnly = false, nodes: initialNodes, edges: initialEdges }) => {
+const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave, onCancel, roadmapId, viewOnly = false, nodes: initialNodes, edges: initialEdges, headerActions, userProgress, onNodeStatusChange }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes || []);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges || []);
     const { toObject, screenToFlowPosition } = useReactFlow();
@@ -74,19 +106,24 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
             if (response.data.success) {
                 const roadmap: RoadmapData = response.data.data;
 
-                const flowNodes = roadmap.nodes.map((node: RoadmapNodeData): Node => {
+                const flowNodes = roadmap.nodes.map((node: RoadmapNodeData): Node<CustomRoadmapNodeData> => {
                     const nodeData = node.data;
+                    const isLearning = userProgress?.currentNodeId === node.id;
+                    const isCompleted = userProgress?.completedNodeIds.includes(node.id) || false;
+
                     if (nodeData && typeof nodeData === 'object') {
                         const level = nodeData.data?.level || node.level || 'OPTIONAL';
                         return {
                             id: node.id,
-                            type: node.node_type || 'default',
+                            type: 'roadmapNode',
                             position: { x: node.position_x, y: node.position_y },
                             data: {
                                 label: node.label,
                                 content: node.content || '',
                                 level: level,
-                                deletable: true
+                                deletable: true,
+                                isLearning,
+                                isCompleted
                             },
                             className: level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white! cursor-pointer!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!'
                         };
@@ -95,13 +132,15 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                     const level = node.level || 'OPTIONAL';
                     return {
                         id: node.id,
-                        type: node.node_type || 'default',
+                        type: 'roadmapNode',
                         position: { x: node.position_x, y: node.position_y },
                         data: {
                             label: node.label,
                             content: node.content || '',
                             level: level,
-                            deletable: true
+                            deletable: true,
+                            isLearning,
+                            isCompleted
                         },
                         className: level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white! cursor-pointer!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!'
                     };
@@ -130,22 +169,64 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
     useEffect(() => {
         if (roadmapId && !initialNodes && !initialEdges) {
             fetchRoadmapData();
+        } else if (initialNodes) {
+            const nodesWithStatus = initialNodes.map((node): Node<CustomRoadmapNodeData> => {
+                const isLearning = userProgress?.currentNodeId === node.id;
+                const isCompleted = userProgress?.completedNodeIds.includes(node.id) || false;
+                const nodeData = node.data as CustomRoadmapNodeData;
+                return {
+                    ...node,
+                    type: 'roadmapNode',
+                    data: {
+                        ...nodeData,
+                        isLearning,
+                        isCompleted
+                    }
+                };
+            });
+            setNodes(nodesWithStatus);
+            if (initialEdges) {
+                setEdges(initialEdges);
+            }
         } else if (!roadmapId && !initialNodes && !initialEdges) {
-            const initialNode: Node = {
+            const initialNode: Node<CustomRoadmapNodeData> = {
                 id: uuidv4(),
-                type: 'default',
+                type: 'roadmapNode',
                 position: { x: 0, y: 0 },
                 data: {
                     label: '-',
                     content: '',
                     level: 'REQUIRED',
-                    deletable: false
+                    deletable: false,
+                    isLearning: false,
+                    isCompleted: false
                 },
                 className: 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white! cursor-pointer!'
             };
             setNodes([initialNode]);
         }
-    }, [roadmapId, initialNodes, initialEdges, setNodes]);
+    }, [roadmapId, initialNodes, initialEdges, setNodes, setEdges, userProgress]);
+
+    useEffect(() => {
+        if (nodes.length > 0 && userProgress) {
+            setNodes((currentNodes) =>
+                currentNodes.map((node): Node<CustomRoadmapNodeData> => {
+                    const isLearning = userProgress?.currentNodeId === node.id;
+                    const isCompleted = userProgress?.completedNodeIds.includes(node.id) || false;
+                    const nodeData = node.data as CustomRoadmapNodeData;
+                    return {
+                        ...node,
+                        type: 'roadmapNode',
+                        data: {
+                            ...nodeData,
+                            isLearning: isLearning || false,
+                            isCompleted: isCompleted || false
+                        }
+                    };
+                })
+            );
+        }
+    }, [userProgress?.currentNodeId, userProgress?.completedNodeIds?.length, setNodes]);
 
     const handleDeleteNode = useCallback(() => {
         if (!selectedNode) return;
@@ -192,15 +273,17 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                 });
 
                 const newNodeId = uuidv4();
-                const newNode: Node = {
+                const newNode: Node<CustomRoadmapNodeData> = {
                     id: newNodeId,
-                    type: 'default',
+                    type: 'roadmapNode',
                     position,
                     data: {
                         label: `-`,
                         content: '',
                         level: 'OPTIONAL',
-                        deletable: true
+                        deletable: true,
+                        isLearning: false,
+                        isCompleted: false
                     },
                     className: 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!'
                 };
@@ -280,7 +363,7 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
         const nodesToSave = nodes.map(({ className, ...node }) => node);
         const roadmapData = {
             name,
-            description,
+            description: description || '',
             topicIds,
             nodes: nodesToSave,
             edges: edges
@@ -297,6 +380,7 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                     {description && <p className='text-stone-600 dark:text-stone-400'>{description}</p>}
                 </div>
                 <div className='flex gap-2'>
+                    {viewOnly && headerActions}
                     {!viewOnly && (
                         <Button onClick={handleSave} disabled={loading}>
                             Lưu Roadmap
@@ -317,14 +401,14 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                         <div className='text-red-500 dark:text-red-400'>{error}</div>
                     </div>
                 ) : (
-                    <ReactFlow className='w-full! flex-1!' nodes={nodes} edges={edges} onNodesChange={viewOnly ? undefined : onNodesChange} onEdgesChange={viewOnly ? undefined : onEdgesChange} onConnect={viewOnly ? undefined : onConnect} onConnectEnd={viewOnly ? undefined : onConnectEnd} onNodeClick={onNodeClick} onNodeDoubleClick={onNodeDoubleClick} onPaneClick={onPaneClick} fitView nodesDraggable={!viewOnly} nodesConnectable={!viewOnly} elementsSelectable={true} defaultEdgeOptions={{ type: 'smoothstep' }}>
+                    <ReactFlow className='w-full! flex-1!' nodes={nodes} edges={edges} onNodesChange={viewOnly ? undefined : onNodesChange} onEdgesChange={viewOnly ? undefined : onEdgesChange} onConnect={viewOnly ? undefined : onConnect} onConnectEnd={viewOnly ? undefined : onConnectEnd} onNodeClick={onNodeClick} onNodeDoubleClick={onNodeDoubleClick} onPaneClick={onPaneClick} fitView nodesDraggable={!viewOnly} nodesConnectable={!viewOnly} elementsSelectable={true} defaultEdgeOptions={{ type: 'smoothstep' }} nodeTypes={{ roadmapNode: RoadmapNode }}>
                         <Background color='#aaa' gap={16} />
                     </ReactFlow>
                 )}
 
                 {isDetailDrawerOpen && selectedNode && (
                     <div className='absolute top-0 right-0 z-50 h-full w-80 rounded-md border border-white bg-white/10 shadow-[inset_0_1px_0px_rgba(255,255,255,0.75),0_0_9px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.15)] backdrop-blur-xs dark:border-stone-700 dark:bg-stone-900/50 dark:shadow-[inset_0_1px_0px_rgba(255,255,255,0.1),0_0_9px_rgba(0,0,0,0.5),0_3px_8px_rgba(0,0,0,0.3)]'>
-                        <NodeDetailDrawer node={selectedNode} isOpen={isDetailDrawerOpen} onClose={() => setIsDetailDrawerOpen(false)} />
+                        <NodeDetailDrawer node={selectedNode} isOpen={isDetailDrawerOpen} onClose={() => setIsDetailDrawerOpen(false)} roadmapId={roadmapId} userProgress={userProgress} onNodeStatusChange={onNodeStatusChange} />
                     </div>
                 )}
             </div>
@@ -344,7 +428,7 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                             </div>
                             <div>
                                 <p className='mb-1 text-sm font-medium'>Level</p>
-                                <select defaultValue={selectedNode.data.level as string} id='node-level' className='w-full rounded border border-stone-300 bg-white px-3 py-2 text-stone-800 focus:ring-2 focus:ring-blue-500 focus:outline-none'>
+                                <select defaultValue={selectedNode.data.level as string} id='node-level' className='w-full rounded border border-stone-300 bg-white px-3 py-2 text-stone-800 focus:ring-2 focus:ring-stone-500 focus:outline-none dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200'>
                                     <option value='OPTIONAL'>Tùy chọn</option>
                                     <option value='REQUIRED'>Bắt buộc</option>
                                 </select>
@@ -373,14 +457,89 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
     );
 };
 
+const RoadmapNode: FC<NodeProps<Node<CustomRoadmapNodeData>>> = ({ data, selected }) => {
+    const isLearning = data.isLearning || false;
+    const isCompleted = data.isCompleted || false;
+
+    return (
+        <div className={`relative rounded-md transition-all duration-300 ${selected ? 'shadow-xl ring-2 ring-stone-600 ring-offset-2 dark:ring-stone-400 dark:ring-offset-stone-800' : ''}`}>
+            <Handle type='target' position={Position.Top} />
+            <div className='relative flex items-center justify-between gap-2 px-3 py-2'>
+                <div className='truncate text-sm leading-none'>{data.label}</div>
+                {isCompleted && (
+                    <div className='h-6 w-6 shrink-0'>
+                        <Lottie animationData={CompletedImage} loop={true} className='h-full w-full' />
+                    </div>
+                )}
+            </div>
+            {isLearning && (
+                <div className='absolute bottom-0 left-1/2 h-10 w-10 -translate-x-1/2 translate-y-full'>
+                    <Lottie animationData={LearningImage} loop={true} className='h-full w-full' />
+                </div>
+            )}
+            <Handle type='source' position={Position.Bottom} />
+        </div>
+    );
+};
+
 type NodeDetailDrawerProps = {
     node: Node | null;
     isOpen: boolean;
     onClose: () => void;
+    roadmapId?: string;
+    userProgress?: UserProgress;
+    onNodeStatusChange?: () => void;
 };
 
-const NodeDetailDrawer: FC<NodeDetailDrawerProps> = ({ node, isOpen, onClose }) => {
+const NodeDetailDrawer: FC<NodeDetailDrawerProps> = ({ node, isOpen, onClose, roadmapId, userProgress, onNodeStatusChange }) => {
+    const { isAuthenticated } = useAuthStore();
+    const [isLoading, setIsLoading] = useState(false);
+    const [isCompleting, setIsCompleting] = useState(false);
+
     if (!isOpen || !node) return null;
+
+    const isLearning = userProgress?.currentNodeId === node.id;
+    const isCompleted = userProgress?.completedNodeIds.includes(node.id) || false;
+
+    const handleToggleLearning = async () => {
+        if (!roadmapId || !isAuthenticated || isLoading) return;
+
+        try {
+            setIsLoading(true);
+            const response = await api.post(apiEndpoints.me.roadmapNodeLearning(roadmapId, node.id));
+
+            if (response.data.success) {
+                toast.success('đã đánh dấu đang học');
+                onNodeStatusChange?.();
+            }
+        } catch (err) {
+            if (isAxiosError(err)) {
+                toast.error(err.response?.data?.error || 'toggle learning fail');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleToggleComplete = async () => {
+        if (!roadmapId || !isAuthenticated || isCompleting) return;
+
+        try {
+            setIsCompleting(true);
+            const response = await api.post(apiEndpoints.me.roadmapNodeComplete(roadmapId, node.id));
+
+            if (response.data.success) {
+                toast.success('đã đánh dấu hoàn thành');
+                onNodeStatusChange?.();
+            }
+        } catch (err) {
+            if (isAxiosError(err)) {
+                toast.error(err.response?.data?.error || 'toggle complete fail');
+            }
+        } finally {
+            setIsCompleting(false);
+        }
+    };
 
     return (
         <div className='flex h-full flex-col p-4 font-semibold text-stone-800 dark:text-stone-200'>
@@ -391,6 +550,24 @@ const NodeDetailDrawer: FC<NodeDetailDrawerProps> = ({ node, isOpen, onClose }) 
                 </button>
             </div>
             <div className='flex-1 overflow-auto pt-4'>{Boolean(node.data.content) && typeof node.data.content === 'string' && <p className='text-base whitespace-pre-wrap text-stone-700 dark:text-stone-300'>{node.data.content}</p>}</div>
+
+            {isAuthenticated && roadmapId && (
+                <div className='mt-4 flex shrink-0 gap-2 border-t border-white/20 pt-4 dark:border-stone-700'>
+                    {isCompleted ? (
+                        <div className='flex flex-1 items-center justify-center gap-2 rounded-md border border-stone-300 bg-stone-100 px-4 py-2 text-stone-600 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-400'>
+                            <FontAwesomeIcon icon={faCheck} className='mr-2' />
+                        </div>
+                    ) : isLearning ? (
+                        <Button onClick={handleToggleComplete} disabled={isLoading || isCompleting} className='h-9 w-9 rounded-md border-stone-800 bg-transparent p-0 text-stone-800 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-700'>
+                            <FontAwesomeIcon icon={faCheck} />
+                        </Button>
+                    ) : (
+                        <Button onClick={handleToggleLearning} disabled={isLoading || isCompleting} className='h-9 w-9 rounded-md border-stone-800 bg-transparent p-0 text-stone-800 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-700'>
+                            <FontAwesomeIcon icon={faBookOpen} />
+                        </Button>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
