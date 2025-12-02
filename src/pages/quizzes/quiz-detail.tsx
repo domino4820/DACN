@@ -201,7 +201,7 @@ const QuizDetail: FC = () => {
 
             <div className='w-full flex-1 space-y-6 overflow-y-auto'>
                 <div>
-                    <h1 className='text-2xl font-bold text-stone-900 dark:text-stone-100'>{quiz.label}</h1>
+                    <p className='text-2xl font-bold text-stone-900 dark:text-stone-100'>{quiz.label}</p>
                 </div>
 
                 <div className='rounded-lg border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-900'>

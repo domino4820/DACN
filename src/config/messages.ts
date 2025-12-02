@@ -14,6 +14,9 @@ const MESSAGES = {
     groupOwnerMustTransfer: 'Owner phải chuyển quyền trước khi rời nhóm',
     quizNotFound: 'Quiz không tồn tại',
     optionNotFound: 'Option không tồn tại',
-    quizAlreadyAnswered: 'Bạn đã trả lời quiz này rồi'
+    quizAlreadyAnswered: 'Bạn đã trả lời quiz này rồi',
+    userNotFound: 'User không tồn tại',
+    userBanned: 'User đã bị cấm!',
+    profileGroupOnly: 'Người dùng khoá trang cá nhân!'
 };
 export default MESSAGES;

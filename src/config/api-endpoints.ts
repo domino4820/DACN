@@ -6,7 +6,8 @@ const apiEndpoints = {
         verify: '/verify',
         topics: '/topics',
         roadmaps: '/roadmaps',
-        groups: '/groups'
+        groups: '/groups',
+        userProfile: (username: string) => `/users/${username}`
     },
     me: {
         getProfile: '/me/profile',

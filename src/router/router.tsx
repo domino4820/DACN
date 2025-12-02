@@ -15,6 +15,7 @@ import Groups from '@/pages/groups/groups';
 import Index from '@/pages/index';
 import Profile from '@/pages/me/profile';
 import NotFound from '@/pages/not-found';
+import User from '@/pages/profile/user';
 import QuizDetail from '@/pages/quizzes/quiz-detail';
 import Quizzes from '@/pages/quizzes/quizzes';
 import Roadmap from '@/pages/roadmaps/roadmap';
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
                         <Profile />
                     </ProtectedRoute>
                 )
+            },
+            {
+                path: paths.profile,
+                element: <User />
             },
             {
                 path: paths.roadmaps,
