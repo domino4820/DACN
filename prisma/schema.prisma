@@ -82,17 +82,23 @@ model UserPath {
   roadmap Roadmap @relation(fields: [roadmap_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, roadmap_id])
+  @@index([current_node_id])
   @@map("user_path")
 }
 
 model UserNodeCompletion {
   user_id      String
+  roadmap_id   String
   node_id      String
   completed_at DateTime @default(now()) @db.Timestamptz
 
-  user User @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [username], onDelete: Cascade)
+  roadmap Roadmap @relation(fields: [roadmap_id], references: [id], onDelete: Cascade)
 
-  @@id([user_id, node_id])
+  @@id([user_id, roadmap_id, node_id])
+  @@index([user_id, roadmap_id])
+  @@index([roadmap_id])
+  @@index([node_id])
   @@map("user_node_completion")
 }
 
@@ -199,11 +205,12 @@ model Roadmap {
   name        String
   description String?
 
-  nodes          RoadmapNode[]
-  edges          RoadmapEdge[]
-  roadmap_topics RoadmapTopic[]
-  user_paths     UserPath[]
-  comments       RoadmapComment[]
+  nodes           RoadmapNode[]
+  edges           RoadmapEdge[]
+  roadmap_topics  RoadmapTopic[]
+  user_paths      UserPath[]
+  comments        RoadmapComment[]
+  completed_nodes UserNodeCompletion[]
 
   @@index([name])
   @@map("roadmap")
