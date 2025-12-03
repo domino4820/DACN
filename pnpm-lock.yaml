@@ -22,15 +22,12 @@ importers:
             '@hono/zod-validator':
                 specifier: 0.7.5
                 version: 0.7.5(hono@4.10.7)(zod@4.1.13)
-            '@openrouter/sdk':
-                specifier: 0.2.9
-                version: 0.2.9
             '@prisma/adapter-pg':
                 specifier: 7.0.1
                 version: 7.0.1
             '@prisma/client':
                 specifier: 7.0.1
-                version: 7.0.1(prisma@7.0.1(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3))(typescript@5.9.3)
+                version: 7.0.1(prisma@7.0.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3)
             axios:
                 specifier: 1.13.2
                 version: 1.13.2
@@ -48,7 +45,7 @@ importers:
                 version: 4.17.1
             prisma:
                 specifier: 7.0.1
-                version: 7.0.1(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+                version: 7.0.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)
             resend:
                 specifier: 6.5.2
                 version: 6.5.2
@@ -430,9 +427,6 @@ packages:
 
     '@one-ini/wasm@0.1.1':
         resolution: { integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw== }
-
-    '@openrouter/sdk@0.2.9':
-        resolution: { integrity: sha512-O3tu6PwoKzwYXCCT+azFneb0F1T6YcZUqlNVEFABWLOcBzdvsCfgW+GM3QKeBL9V0E1ZBjVy9yssavNjhphO6Q== }
 
     '@pkgjs/parseargs@0.11.0':
         resolution: { integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg== }
@@ -1193,8 +1187,8 @@ packages:
     graceful-fs@4.2.11:
         resolution: { integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ== }
 
-    grammex@3.1.11:
-        resolution: { integrity: sha512-HNwLkgRg9SqTAd1N3Uh/MnKwTBTzwBxTOPbXQ8pb0tpwydjk90k4zRE8JUn9fMUiRwKtXFZ1TWFmms3dZHN+Fg== }
+    grammex@3.1.12:
+        resolution: { integrity: sha512-6ufJOsSA7LcQehIJNCO7HIBykfM7DXQual0Ny780/DEcJIpBlHRvcqEBWGPYd7hrXL2GJ3oJI1MIhaXjWmLQOQ== }
 
     has-flag@3.0.0:
         resolution: { integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw== }
@@ -1919,13 +1913,13 @@ packages:
     rc9@2.1.2:
         resolution: { integrity: sha512-btXCnMmRIBINM2LDZoEmOogIZU7Qe7zn4BpomSKZ/ykbLObuBdvG+mFq11DL6fjH1DRwHhrlgtYWG96bJiC7Cg== }
 
-    react-dom@19.2.0:
-        resolution: { integrity: sha512-UlbRu4cAiGaIewkPyiRGJk0imDN2T3JjieT6spoL2UeSf5od4n5LB/mQ4ejmxhCFT1tYe8IvaFulzynWovsEFQ== }
+    react-dom@19.2.1:
+        resolution: { integrity: sha512-ibrK8llX2a4eOskq1mXKu/TGZj9qzomO+sNfO98M6d9zIPOEhlBkMkBUBLd1vgS0gQsLDBzA+8jJBVXDnfHmJg== }
         peerDependencies:
-            react: ^19.2.0
+            react: ^19.2.1
 
-    react@19.2.0:
-        resolution: { integrity: sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ== }
+    react@19.2.1:
+        resolution: { integrity: sha512-DGrYcCWK7tvYMnWh79yrPHt+vdx9tY+1gPZa7nJQtO/p8bLTDaHp4dzwEhQB7pZ4Xe3ok4XKuEPrVuc+wlpkmw== }
         engines: { node: '>=0.10.0' }
 
     readable-stream@3.6.2:
@@ -2306,8 +2300,8 @@ packages:
         resolution: { integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA== }
         engines: { node: '>=10' }
 
-    yaml@2.8.1:
-        resolution: { integrity: sha512-lcYcMxX2PO9XMGvAJkJ3OsNMw+/7FKes7/hgerGUYWIoWu5j/+YQqcZr5JnPZWzOsEBgMbSbiSTn/dv/69Mkpw== }
+    yaml@2.8.2:
+        resolution: { integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A== }
         engines: { node: '>= 14.6' }
         hasBin: true
 
@@ -2620,10 +2614,6 @@ snapshots:
 
     '@one-ini/wasm@0.1.1': {}
 
-    '@openrouter/sdk@0.2.9':
-        dependencies:
-            zod: 4.1.13
-
     '@pkgjs/parseargs@0.11.0':
         optional: true
 
@@ -2637,11 +2627,11 @@ snapshots:
 
     '@prisma/client-runtime-utils@7.0.1': {}
 
-    '@prisma/client@7.0.1(prisma@7.0.1(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3))(typescript@5.9.3)':
+    '@prisma/client@7.0.1(prisma@7.0.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3)':
         dependencies:
             '@prisma/client-runtime-utils': 7.0.1
         optionalDependencies:
-            prisma: 7.0.1(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+            prisma: 7.0.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)
             typescript: 5.9.3
 
     '@prisma/config@7.0.1':
@@ -2708,11 +2698,11 @@ snapshots:
 
     '@prisma/query-plan-executor@6.18.0': {}
 
-    '@prisma/studio-core@0.8.2(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    '@prisma/studio-core@0.8.2(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
         dependencies:
             '@types/react': 19.2.7
-            react: 19.2.0
-            react-dom: 19.2.0(react@19.2.0)
+            react: 19.2.1
+            react-dom: 19.2.1(react@19.2.1)
 
     '@socket.io/component-emitter@3.1.2': {}
 
@@ -3497,7 +3487,7 @@ snapshots:
 
     graceful-fs@4.2.11: {}
 
-    grammex@3.1.11: {}
+    grammex@3.1.12: {}
 
     has-flag@3.0.0: {}
 
@@ -3702,7 +3692,7 @@ snapshots:
             nano-spawn: 2.0.0
             pidtree: 0.6.0
             string-argv: 0.3.2
-            yaml: 2.8.1
+            yaml: 2.8.2
 
     listr2@9.0.5:
         dependencies:
@@ -4182,7 +4172,7 @@ snapshots:
 
     openapi3-ts@4.5.0:
         dependencies:
-            yaml: 2.8.1
+            yaml: 2.8.2
 
     ora@5.4.1:
         dependencies:
@@ -4323,12 +4313,12 @@ snapshots:
 
     prettier@3.6.2: {}
 
-    prisma@7.0.1(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3):
+    prisma@7.0.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3):
         dependencies:
             '@prisma/config': 7.0.1
             '@prisma/dev': 0.13.0(typescript@5.9.3)
             '@prisma/engines': 7.0.1
-            '@prisma/studio-core': 0.8.2(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+            '@prisma/studio-core': 0.8.2(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
             mysql2: 3.15.3
             postgres: 3.4.7
         optionalDependencies:
@@ -4362,12 +4352,12 @@ snapshots:
             defu: 6.1.4
             destr: 2.0.5
 
-    react-dom@19.2.0(react@19.2.0):
+    react-dom@19.2.1(react@19.2.1):
         dependencies:
-            react: 19.2.0
+            react: 19.2.1
             scheduler: 0.27.0
 
-    react@19.2.0: {}
+    react@19.2.1: {}
 
     readable-stream@3.6.2:
         dependencies:
@@ -4693,7 +4683,7 @@ snapshots:
 
     y18n@5.0.8: {}
 
-    yaml@2.8.1: {}
+    yaml@2.8.2: {}
 
     yargs-parser@21.1.1: {}
 
@@ -4711,6 +4701,6 @@ snapshots:
 
     zeptomatch@2.0.2:
         dependencies:
-            grammex: 3.1.11
+            grammex: 3.1.12
 
     zod@4.1.13: {}
