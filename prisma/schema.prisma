@@ -321,7 +321,6 @@ model Admin {
 
 model Config {
   id         String  @id @default("singleton")
-  zai_api    String?
   resend_api String?
 
   @@map("config")

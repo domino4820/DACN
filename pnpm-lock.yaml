@@ -22,6 +22,9 @@ importers:
             '@hono/zod-validator':
                 specifier: 0.7.5
                 version: 0.7.5(hono@4.10.7)(zod@4.1.13)
+            '@openrouter/sdk':
+                specifier: 0.2.9
+                version: 0.2.9
             '@prisma/adapter-pg':
                 specifier: 7.0.1
                 version: 7.0.1
@@ -427,6 +430,9 @@ packages:
 
     '@one-ini/wasm@0.1.1':
         resolution: { integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw== }
+
+    '@openrouter/sdk@0.2.9':
+        resolution: { integrity: sha512-O3tu6PwoKzwYXCCT+azFneb0F1T6YcZUqlNVEFABWLOcBzdvsCfgW+GM3QKeBL9V0E1ZBjVy9yssavNjhphO6Q== }
 
     '@pkgjs/parseargs@0.11.0':
         resolution: { integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg== }
@@ -2613,6 +2619,10 @@ snapshots:
             fastq: 1.19.1
 
     '@one-ini/wasm@0.1.1': {}
+
+    '@openrouter/sdk@0.2.9':
+        dependencies:
+            zod: 4.1.13
 
     '@pkgjs/parseargs@0.11.0':
         optional: true

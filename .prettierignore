@@ -1,7 +1,7 @@
 node_modules
 dist
-generated
+build
 *.log
 .env
 .env.local
-
+static
