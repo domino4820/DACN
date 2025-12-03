@@ -4,7 +4,8 @@ import apiEndpoints from '@/config/api-endpoints';
 import paths from '@/config/paths';
 import { useAdminStore } from '@/store/admin.store';
 import api from '@/utils/api';
-import { isAxiosError } from 'axios';
+import { getErrorMessage } from '@/utils/error-handler';
+import { AxiosError } from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -13,7 +14,12 @@ interface AdminLoginResponse {
     data?: {
         token: string;
     };
-    error?: string;
+    error?:
+        | string
+        | {
+              name?: string;
+              message?: string;
+          };
 }
 
 const AdminLogin = () => {
@@ -40,11 +46,28 @@ const AdminLogin = () => {
                 login(token);
                 navigate(paths.admin.root);
             } else {
-                setError(response.data.error || 'Tài khoản hoặc mật khẩu không chính xác');
+                const errorData = response.data.error;
+                if (typeof errorData === 'string') {
+                    setError(errorData);
+                } else if (errorData?.message) {
+                    try {
+                        const zodErrors = JSON.parse(errorData.message);
+                        if (Array.isArray(zodErrors) && zodErrors.length > 0) {
+                            setError(zodErrors[0].message);
+                        } else {
+                            setError('Tài khoản hoặc mật khẩu không chính xác');
+                        }
+                    } catch {
+                        setError(errorData.message);
+                    }
+                } else {
+                    setError('Tài khoản hoặc mật khẩu không chính xác');
+                }
             }
         } catch (err) {
-            if (isAxiosError(err)) {
-                setError(err.response?.data?.error || 'Đăng nhập thất bại');
+            if (err instanceof AxiosError) {
+                const errorMessage = getErrorMessage(err, 'Đăng nhập thất bại');
+                setError(errorMessage);
             } else {
                 setError('Đăng nhập thất bại');
             }
