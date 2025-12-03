@@ -1,0 +1,36 @@
+{
+  "allFiles": [
+    "/static/css/index-55dd04bf6f137350.css",
+    "/static/js/index-55dd04bf6f137350.js",
+    "/static/js/lib-react-55dd04bf6f137350.js",
+    "/static/js/lib-router-55dd04bf6f137350.js",
+    "/static/js/lib-axios-55dd04bf6f137350.js",
+    "/static/js/198-55dd04bf6f137350.js",
+    "/static/image/logo-transparent.dd3214d0.png",
+    "/favicon.ico",
+    "/index.html"
+  ],
+  "entries": {
+    "index": {
+      "assets": [
+        "static/image/logo-transparent.dd3214d0.png"
+      ],
+      "html": [
+        "/index.html"
+      ],
+      "initial": {
+        "js": [
+          "/static/js/lib-react-55dd04bf6f137350.js",
+          "/static/js/lib-router-55dd04bf6f137350.js",
+          "/static/js/lib-axios-55dd04bf6f137350.js",
+          "/static/js/198-55dd04bf6f137350.js",
+          "/static/js/index-55dd04bf6f137350.js"
+        ],
+        "css": [
+          "/static/css/index-55dd04bf6f137350.css"
+        ]
+      }
+    }
+  },
+  "integrity": {}
+}
