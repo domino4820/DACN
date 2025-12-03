@@ -4,4 +4,4 @@ build
 *.log
 .env
 .env.local
-
+static

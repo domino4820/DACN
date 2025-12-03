@@ -237,7 +237,7 @@ const QuizDetail: FC = () => {
 
                         <div className='flex justify-end'>
                             <Button onClick={handleSubmitAnswer} disabled={!selectedOptionId || submitting}>
-                                {submitting ? 'Đang gửi...' : 'Gửi câu trả lời'}
+                                {submitting ? 'Đang xử lý...' : 'Trả lời'}
                             </Button>
                         </div>
                     </>

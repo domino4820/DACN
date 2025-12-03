@@ -39,6 +39,8 @@ const apiEndpoints = {
         quizzes: '/admin/quizzes',
         users: '/admin/users',
         changePassword: '/admin/change-password',
+        genRoadmap: '/admin/gen-roadmap',
+        genQuizz: '/admin/gen-quizz',
         userDetail: (username: string) => `/admin/users/${username}`,
         userBan: (username: string) => `/admin/users/${username}/ban`,
         userVerify: (username: string) => `/admin/users/${username}/verify`

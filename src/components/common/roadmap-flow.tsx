@@ -6,7 +6,7 @@ import Textarea from '@/components/admin/ui/textarea';
 import apiEndpoints from '@/config/api-endpoints';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/utils/api';
-import { faBookOpen, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faBookOpen, faCheck, faCircleNotch, faTimes, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { addEdge, Background, Handle, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type Node, type NodeProps, type OnConnectEnd } from '@xyflow/react';
 import { isAxiosError } from 'axios';
@@ -83,9 +83,10 @@ type RoadmapFlowProps = {
     headerActions?: ReactNode;
     userProgress?: UserProgress;
     onNodeStatusChange?: () => void;
+    onDescriptionChange?: (description: string) => void;
 };
 
-const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave, onCancel, roadmapId, viewOnly = false, nodes: initialNodes, edges: initialEdges, headerActions, userProgress, onNodeStatusChange }) => {
+const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave, onCancel, roadmapId, viewOnly = false, nodes: initialNodes, edges: initialEdges, headerActions, userProgress, onNodeStatusChange, onDescriptionChange }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes || []);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges || []);
     const { toObject, screenToFlowPosition } = useReactFlow();
@@ -94,6 +95,7 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
     const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [generateLoading, setGenerateLoading] = useState(false);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
     const fetchRoadmapData = async () => {
@@ -357,6 +359,72 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
         setSelectedNode(null);
     };
 
+    const handleGenerate = async () => {
+        if (!name.trim()) {
+            setError('Tên roadmap không được để trống');
+            return;
+        }
+
+        try {
+            setGenerateLoading(true);
+            setError(null);
+
+            const response = await api.post<{
+                success: boolean;
+                data: {
+                    name: string;
+                    description: string | null;
+                    topicIds: string[];
+                    nodes: Node[];
+                    edges: Edge[];
+                };
+                error?: string;
+            }>(apiEndpoints.admin.genRoadmap, {
+                name: name.trim(),
+                description: (description || '').trim() || undefined
+            });
+
+            if (response.data.success) {
+                const { description: newDescription, nodes: generatedNodes, edges: generatedEdges } = response.data.data;
+
+                const transformedNodes = generatedNodes.map((node: Node) => {
+                    const nodeData = node.data as { label: string; content?: string; level: 'REQUIRED' | 'OPTIONAL' };
+                    const level = nodeData?.level || 'OPTIONAL';
+                    const className = level === 'REQUIRED' ? 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border-2! border-stone-900! dark:border-stone-300! text-black! dark:text-white! cursor-pointer!' : 'shadow-md! rounded-md! bg-white! dark:bg-stone-800! border! border-stone-300! dark:border-stone-600! text-black! dark:text-white! cursor-pointer!';
+
+                    return {
+                        ...node,
+                        type: 'roadmapNode',
+                        data: {
+                            ...nodeData,
+                            deletable: true,
+                            isLearning: false,
+                            isCompleted: false
+                        },
+                        className
+                    };
+                });
+
+                if (newDescription && onDescriptionChange) {
+                    onDescriptionChange(newDescription);
+                }
+
+                setNodes(transformedNodes);
+                setEdges(generatedEdges);
+            } else {
+                setError(response.data.error || 'Generate roadmap lỗi!');
+            }
+        } catch (err) {
+            if (isAxiosError(err)) {
+                setError(err.response?.data?.error || 'Generate roadmap lỗi!');
+            } else {
+                setError('Generate roadmap lỗi!');
+            }
+        } finally {
+            setGenerateLoading(false);
+        }
+    };
+
     const handleSave = () => {
         const flowObject = toObject();
         const { nodes, edges } = flowObject;
@@ -382,9 +450,16 @@ const RoadmapFlow: FC<RoadmapFlowProps> = ({ name, description, topicIds, onSave
                 <div className='flex gap-2'>
                     {viewOnly && headerActions}
                     {!viewOnly && (
-                        <Button onClick={handleSave} disabled={loading}>
-                            Lưu Roadmap
-                        </Button>
+                        <>
+                            {!roadmapId && (
+                                <Button onClick={handleGenerate} disabled={loading || generateLoading} className='h-9 w-9 rounded-md bg-transparent p-0 text-stone-800 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-700'>
+                                    {generateLoading ? <FontAwesomeIcon icon={faCircleNotch} className='animate-spin' /> : <FontAwesomeIcon icon={faWandMagicSparkles} />}
+                                </Button>
+                            )}
+                            <Button onClick={handleSave} disabled={loading || generateLoading}>
+                                Lưu Roadmap
+                            </Button>
+                        </>
                     )}
                     <Button className='bg-transparent text-stone-800 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-700' onClick={onCancel}>
                         {viewOnly ? 'Quay lại' : 'Hủy'}

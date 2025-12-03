@@ -126,8 +126,15 @@ const RoadmapForm: FC<RoadmapFormProps> = ({ onClose, onSuccess, roadmapId }) =>
         }
     };
 
+    const handleDescriptionChange = (newDescription: string) => {
+        setFormData((prev) => ({
+            ...prev,
+            description: newDescription
+        }));
+    };
+
     if (showFlow) {
-        return <RoadmapFlow name={formData.name} description={formData.description} topicIds={formData.topicIds} onSave={handleSaveRoadmap} onCancel={onClose} roadmapId={roadmapId} />;
+        return <RoadmapFlow name={formData.name} description={formData.description} topicIds={formData.topicIds} onSave={handleSaveRoadmap} onCancel={onClose} roadmapId={roadmapId} onDescriptionChange={handleDescriptionChange} />;
     }
 
     return (

@@ -11,7 +11,6 @@ import { useEffect, useState } from 'react';
 
 interface Config {
     id: string;
-    gemini_api: string | null;
     resend_api: string | null;
 }
 
@@ -23,14 +22,12 @@ interface ApiResponse<T> {
 }
 
 interface UpdateConfig {
-    gemini_api: string;
-    resend_api: string;
+    resend_api?: string;
 }
 
 const Config: FC = () => {
     const [error, setError] = useState<string | null>(null);
-    const [updateConfig, setUpdateConfig] = useState<UpdateConfig>({ gemini_api: '', resend_api: '' });
-    const [showGeminiKey, setShowGeminiKey] = useState(false);
+    const [updateConfig, setUpdateConfig] = useState<UpdateConfig>({ resend_api: '' });
     const [showResendKey, setShowResendKey] = useState(false);
     const { contentHeight } = useLayoutStore();
 
@@ -42,7 +39,6 @@ const Config: FC = () => {
         try {
             const response = await api.get<ApiResponse<Config>>(apiEndpoints.admin.config);
             setUpdateConfig({
-                gemini_api: response.data.data.gemini_api || '',
                 resend_api: response.data.data.resend_api || ''
             });
             setError(null);
@@ -74,10 +70,6 @@ const Config: FC = () => {
         }
     };
 
-    const toggleGeminiKeyVisibility = () => {
-        setShowGeminiKey(!showGeminiKey);
-    };
-
     const toggleResendKeyVisibility = () => {
         setShowResendKey(!showResendKey);
     };
@@ -96,18 +88,6 @@ const Config: FC = () => {
             <div className='flex-1 overflow-hidden rounded-lg bg-white shadow'>
                 <div className='h-full overflow-y-auto p-4'>
                     <form id='config-form' onSubmit={handleUpdateConfig}>
-                        <div className='mb-4'>
-                            <label htmlFor='gemini-api' className='mb-2 block text-sm font-bold text-gray-700'>
-                                Gemini API Key
-                            </label>
-                            <div className='relative'>
-                                <Input id='gemini-api' type={showGeminiKey ? 'text' : 'password'} value={updateConfig.gemini_api} onChange={(e) => setUpdateConfig({ ...updateConfig, gemini_api: e.target.value })} placeholder='Nhập Gemini API Key' className='py-3 pr-20' />
-                                <button type='button' className='absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700' onClick={toggleGeminiKeyVisibility} tabIndex={-1}>
-                                    <FontAwesomeIcon icon={showGeminiKey ? faEyeSlash : faEye} />
-                                </button>
-                            </div>
-                        </div>
-
                         <div className='mb-4'>
                             <label htmlFor='resend-api' className='mb-2 block text-sm font-bold text-gray-700'>
                                 Resend API Key
