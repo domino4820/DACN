@@ -1,4 +1,5 @@
 import groups from '@/api/public/groups.js';
+import post from '@/api/public/post/post.js';
 import roadmaps from '@/api/public/roadmaps.js';
 import topics from '@/api/public/topics.js';
 import users from '@/api/public/users.js';
@@ -18,4 +19,5 @@ app.route('/roadmaps', roadmaps);
 app.route('/topics', topics);
 app.route('/groups', groups);
 app.route('/users', users);
+app.route('/posts', post);
 export default app;

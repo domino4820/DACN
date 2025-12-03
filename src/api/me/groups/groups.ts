@@ -26,6 +26,14 @@ const messageQuerySchema = z.object({
         })
 });
 
+const kickMemberSchema = z.object({
+    username: z.string().min(1)
+});
+
+const transferOwnershipSchema = z.object({
+    username: z.string().min(1)
+});
+
 const messageUserSelect = {
     username: true,
     profile: {
@@ -331,6 +339,152 @@ app.get('/:id/messages', zValidator('param', groupIdParamSchema), zValidator('qu
         );
     } catch (error) {
         console.log('get group messages fail', error);
+        return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
+    }
+});
+
+app.post('/:id/kick', zValidator('param', groupIdParamSchema), zValidator('json', kickMemberSchema), async (c) => {
+    try {
+        const username = c.get('username');
+        const { id } = c.req.valid('param');
+        const { username: targetUsername } = c.req.valid('json');
+
+        if (username === targetUsername) {
+            return c.json({ success: false, error: MESSAGES.groupCannotKickSelf }, 400);
+        }
+
+        const ownerMembership = await prisma.groupMember.findUnique({
+            where: {
+                group_id_user_id: {
+                    group_id: id,
+                    user_id: username
+                }
+            },
+            select: { role: true }
+        });
+
+        if (!ownerMembership) {
+            return c.json({ success: false, error: MESSAGES.groupNotMember }, 403);
+        }
+
+        if (ownerMembership.role !== 'OWNER') {
+            return c.json({ success: false, error: MESSAGES.groupNotOwner }, 403);
+        }
+
+        const targetMembership = await prisma.groupMember.findUnique({
+            where: {
+                group_id_user_id: {
+                    group_id: id,
+                    user_id: targetUsername
+                }
+            }
+        });
+
+        if (!targetMembership) {
+            return c.json({ success: false, error: MESSAGES.groupMemberNotFound }, 404);
+        }
+
+        await prisma.groupMember.delete({
+            where: {
+                group_id_user_id: {
+                    group_id: id,
+                    user_id: targetUsername
+                }
+            }
+        });
+
+        const groupWithMembers = await prisma.group.findUnique({
+            where: { id },
+            include: groupWithMembersInclude
+        });
+
+        return c.json(
+            {
+                success: true,
+                data: groupWithMembers
+            },
+            200
+        );
+    } catch {
+        return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
+    }
+});
+
+app.post('/:id/transfer', zValidator('param', groupIdParamSchema), zValidator('json', transferOwnershipSchema), async (c) => {
+    try {
+        const username = c.get('username');
+        const { id } = c.req.valid('param');
+        const { username: targetUsername } = c.req.valid('json');
+
+        if (username === targetUsername) {
+            return c.json({ success: false, error: MESSAGES.groupCannotTransferSelf }, 400);
+        }
+
+        const ownerMembership = await prisma.groupMember.findUnique({
+            where: {
+                group_id_user_id: {
+                    group_id: id,
+                    user_id: username
+                }
+            },
+            select: { role: true }
+        });
+
+        if (!ownerMembership) {
+            return c.json({ success: false, error: MESSAGES.groupNotMember }, 403);
+        }
+
+        if (ownerMembership.role !== 'OWNER') {
+            return c.json({ success: false, error: MESSAGES.groupNotOwner }, 403);
+        }
+
+        const targetMembership = await prisma.groupMember.findUnique({
+            where: {
+                group_id_user_id: {
+                    group_id: id,
+                    user_id: targetUsername
+                }
+            }
+        });
+
+        if (!targetMembership) {
+            return c.json({ success: false, error: MESSAGES.groupMemberNotFound }, 404);
+        }
+
+        await prisma.$transaction([
+            prisma.groupMember.update({
+                where: {
+                    group_id_user_id: {
+                        group_id: id,
+                        user_id: username
+                    }
+                },
+                data: { role: 'MEMBER' }
+            }),
+            prisma.groupMember.update({
+                where: {
+                    group_id_user_id: {
+                        group_id: id,
+                        user_id: targetUsername
+                    }
+                },
+                data: { role: 'OWNER' }
+            })
+        ]);
+
+        const groupWithMembers = await prisma.group.findUnique({
+            where: { id },
+            include: groupWithMembersInclude
+        });
+
+        return c.json(
+            {
+                success: true,
+                data: groupWithMembers
+            },
+            200
+        );
+    } catch {
         return c.json({ success: false, error: MESSAGES.internalServerError }, 500);
     }
 });
