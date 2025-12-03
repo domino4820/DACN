@@ -1,5 +1,6 @@
 const paths = {
     blog: '/blog',
+    blogDetail: '/blog/:id',
     faq: '/faq',
     groups: '/groups',
     groupDetails: '/groups/:id',

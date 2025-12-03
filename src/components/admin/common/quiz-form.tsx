@@ -144,21 +144,21 @@ const QuizForm: FC<QuizFormProps> = ({ onClose, onSuccess }) => {
 
             <form onSubmit={handleSubmit} className='space-y-6'>
                 <div>
-                    <label htmlFor='quiz-label' className='mb-2 block text-sm font-bold text-gray-700'>
+                    <label htmlFor='quiz-label' className='block text-sm font-bold text-gray-700'>
                         Tên Quiz *
                     </label>
                     <Input id='quiz-label' type='text' value={formData.label} onChange={(e) => setFormData((prev) => ({ ...prev, label: e.target.value }))} placeholder='(VD: SQL vs NoSQL)' required maxLength={200} disabled={loading} />
                 </div>
 
                 <div>
-                    <label htmlFor='quiz-content' className='mb-2 block text-sm font-bold text-gray-700'>
+                    <label htmlFor='quiz-content' className='block text-sm font-bold text-gray-700'>
                         Nội dung câu hỏi *
                     </label>
                     <Textarea id='quiz-content' value={formData.content} onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))} placeholder='(VD: Điểm khác nhau chính về khả năng mở rộng (scaling) giữa SQL và NoSQL là gì?)' rows={3} required disabled={loading} />
                 </div>
 
                 <div>
-                    <label htmlFor='quiz-topic' className='mb-2 block text-sm font-bold text-gray-700'>
+                    <label htmlFor='quiz-topic' className='block text-sm font-bold text-gray-700'>
                         Topic *
                     </label>
                     <Dropdown trigger={topics.find((t) => t.id === formData.topic_id)?.name || 'Chọn topic'} triggerVariant='outline' triggerClassName='inline-flex items-center justify-start w-[150px] truncate rounded-md border border-stone-800 px-4 py-2 text-left align-middle font-sans text-sm font-medium transition-all duration-300 ease-in' menuClassName='w-[150px]'>
@@ -171,7 +171,7 @@ const QuizForm: FC<QuizFormProps> = ({ onClose, onSuccess }) => {
                 </div>
 
                 <div>
-                    <div className='mb-2 block text-sm font-bold text-gray-700'>Đáp án *</div>
+                    <div className='block text-sm font-bold text-gray-700'>Đáp án *</div>
                     <div className='space-y-2'>
                         {formData.options.map((option, oIndex) => (
                             <div key={option.id} className='flex items-center gap-2'>

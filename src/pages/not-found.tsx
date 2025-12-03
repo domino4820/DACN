@@ -18,7 +18,7 @@ const NotFound: FC = () => {
                         <div className='h-8 w-px bg-stone-300 dark:bg-stone-600'></div>
                         <span className='text-sm font-medium text-stone-600 dark:text-stone-400'>Không tồn tại</span>
                     </div>
-                    <p className='mb-2 text-3xl font-bold text-stone-900 dark:text-stone-100'>Trang không tồn tại</p>
+                    <p className='text-3xl font-bold text-stone-900 dark:text-stone-100'>Trang không tồn tại</p>
                     <p className='text-stone-600 dark:text-stone-400'>Trang bạn truy cập không tồn tại hoặc đã bị xoá. Vui lòng kiểm tra lại đường dẫn hoặc quay lại để tiếp tục sử dụng hệ thống.</p>
                 </div>
 

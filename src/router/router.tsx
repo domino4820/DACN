@@ -10,6 +10,8 @@ import Users from '@/pages/admin/users';
 import Login from '@/pages/auth/login';
 import Register from '@/pages/auth/register';
 import Verify from '@/pages/auth/verify';
+import Blog from '@/pages/blog/blog';
+import BlogDetail from '@/pages/blog/blog-detail';
 import GroupDetails from '@/pages/groups/group-details';
 import Groups from '@/pages/groups/groups';
 import Index from '@/pages/index';
@@ -104,6 +106,14 @@ const router = createBrowserRouter([
                         <QuizDetail />
                     </ProtectedRoute>
                 )
+            },
+            {
+                path: paths.blog,
+                element: <Blog />
+            },
+            {
+                path: paths.blogDetail,
+                element: <BlogDetail />
             },
             {
                 path: paths.notFound,

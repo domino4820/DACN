@@ -138,19 +138,19 @@ const RoadmapForm: FC<RoadmapFormProps> = ({ onClose, onSuccess, roadmapId }) =>
 
             <div className='space-y-4'>
                 <div>
-                    <label htmlFor='roadmap-name' className='mb-2 block text-sm font-bold text-gray-700'>
+                    <label htmlFor='roadmap-name' className='block text-sm font-bold text-gray-700'>
                         Tên Roadmap
                     </label>
                     <Input id='roadmap-name' name='name' value={formData.name} onChange={handleInputChange} placeholder='Nhập tên roadmap' disabled={loading} />
                 </div>
                 <div>
-                    <label htmlFor='roadmap-description' className='mb-2 block text-sm font-bold text-gray-700'>
+                    <label htmlFor='roadmap-description' className='block text-sm font-bold text-gray-700'>
                         Mô tả
                     </label>
                     <Textarea id='roadmap-description' name='description' value={formData.description} onChange={handleInputChange} placeholder='Nhập mô tả cho roadmap' rows={3} disabled={loading} />
                 </div>
                 <div>
-                    <label htmlFor='topic-select' className='mb-2 block text-sm font-bold text-gray-700'>
+                    <label htmlFor='topic-select' className='block text-sm font-bold text-gray-700'>
                         Topic
                     </label>
                     <div className='space-y-2'>
@@ -162,7 +162,7 @@ const RoadmapForm: FC<RoadmapFormProps> = ({ onClose, onSuccess, roadmapId }) =>
                             ))}
                         </Dropdown>
                         {formData.topicIds.length > 0 && (
-                            <div className='mt-2 flex flex-wrap gap-2'>
+                            <div className='flex flex-wrap gap-2'>
                                 {formData.topicIds.map((topicId) => {
                                     const topic = topics.find((t) => t.id === topicId);
                                     return topic ? (
@@ -175,8 +175,8 @@ const RoadmapForm: FC<RoadmapFormProps> = ({ onClose, onSuccess, roadmapId }) =>
                         )}
                     </div>
                 </div>
-                <div className='flex justify-end'>
-                    <Button type='button' className='mr-2 bg-transparent text-stone-800 hover:bg-stone-100' onClick={onClose}>
+                <div className='flex justify-end gap-2'>
+                    <Button type='button' className='bg-transparent text-stone-800 hover:bg-stone-100' onClick={onClose}>
                         Hủy
                     </Button>
                     <Button onClick={handleContinue} disabled={loading}>

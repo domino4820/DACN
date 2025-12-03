@@ -7,7 +7,10 @@ const apiEndpoints = {
         topics: '/topics',
         roadmaps: '/roadmaps',
         groups: '/groups',
-        userProfile: (username: string) => `/users/${username}`
+        userProfile: (username: string) => `/users/${username}`,
+        userPosts: (username: string) => `/posts/u/${username}`,
+        posts: '/posts',
+        postDetail: (id: string) => `/posts/${id}`
     },
     me: {
         getProfile: '/me/profile',
@@ -21,13 +24,24 @@ const apiEndpoints = {
         roadmapNodeLearning: (roadmapId: string, nodeId: string) => `/me/roadmaps/${roadmapId}/nodes/${nodeId}/learning`,
         roadmapNodeComplete: (roadmapId: string, nodeId: string) => `/me/roadmaps/${roadmapId}/nodes/${nodeId}/complete`,
         groups: '/me/groups',
-        quizzes: '/me/quizzes'
+        groupKick: (groupId: string) => `/me/groups/${groupId}/kick`,
+        groupTransfer: (groupId: string) => `/me/groups/${groupId}/transfer`,
+        quizzes: '/me/quizzes',
+        createPost: '/me/posts',
+        updatePost: (postId: string) => `/me/posts/${postId}`,
+        deletePost: (postId: string) => `/me/posts/${postId}`,
+        createPostComment: (postId: string) => `/me/posts/${postId}/comments`
     },
     admin: {
         config: '/admin/config',
         topics: '/admin/topics',
         roadmap: '/admin/roadmap',
-        quizzes: '/admin/quizzes'
+        quizzes: '/admin/quizzes',
+        users: '/admin/users',
+        changePassword: '/admin/change-password',
+        userDetail: (username: string) => `/admin/users/${username}`,
+        userBan: (username: string) => `/admin/users/${username}/ban`,
+        userVerify: (username: string) => `/admin/users/${username}/verify`
     }
 };
 

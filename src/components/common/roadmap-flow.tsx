@@ -509,7 +509,6 @@ const NodeDetailDrawer: FC<NodeDetailDrawerProps> = ({ node, isOpen, onClose, ro
             const response = await api.post(apiEndpoints.me.roadmapNodeLearning(roadmapId, node.id));
 
             if (response.data.success) {
-                toast.success('đã đánh dấu đang học');
                 onNodeStatusChange?.();
             }
         } catch (err) {
@@ -529,7 +528,6 @@ const NodeDetailDrawer: FC<NodeDetailDrawerProps> = ({ node, isOpen, onClose, ro
             const response = await api.post(apiEndpoints.me.roadmapNodeComplete(roadmapId, node.id));
 
             if (response.data.success) {
-                toast.success('đã đánh dấu hoàn thành');
                 onNodeStatusChange?.();
             }
         } catch (err) {

@@ -1,6 +1,9 @@
 import CoverImage2 from '@/assets/lottie/cover-2.json';
 import CoverImage from '@/assets/lottie/cover.json';
 import LoadingImage from '@/assets/lottie/loading.json';
+import Wysiwyg from '@/components/common/wysiwyg';
+import Button from '@/components/ui/button';
+import Pagination from '@/components/ui/pagination';
 import apiEndpoints from '@/config/api-endpoints';
 import MESSAGES from '@/config/messages';
 import paths from '@/config/paths';
@@ -8,7 +11,7 @@ import { useAuthStore } from '@/store/auth.store';
 import api from '@/utils/api';
 import { getErrorMessage } from '@/utils/error-handler';
 import { faFacebook, faGithub } from '@fortawesome/free-brands-svg-icons';
-import { faCalendarAlt, faEnvelope, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarAlt, faComment, faEnvelope, faPencilAlt, faPlus, faTrash, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AxiosError } from 'axios';
 import Lottie from 'lottie-react';
@@ -44,6 +47,42 @@ interface ApiResponse<T> {
     error?: string;
 }
 
+interface PostUser {
+    username: string;
+    profile: {
+        name: string | null;
+        avatar_url: string | null;
+    } | null;
+}
+
+interface Post {
+    id: string;
+    title: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    user: PostUser;
+    _count: {
+        comments: number;
+    };
+}
+
+interface PostPagination {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
+
+interface PostsResponse {
+    success: boolean;
+    data: Post[];
+    pagination: PostPagination;
+    error?: string;
+}
+
 const User: FC = () => {
     const { username } = useParams<{ username: string }>();
     const navigate = useNavigate();
@@ -53,6 +92,17 @@ const User: FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [height, setHeight] = useState<number>(0);
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [postsLoading, setPostsLoading] = useState(false);
+    const [pagination, setPagination] = useState<PostPagination | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [showEditor, setShowEditor] = useState(false);
+    const [createForm, setCreateForm] = useState({ title: '', content: '' });
+    const [isCreating, setIsCreating] = useState(false);
+    const [editingPostId, setEditingPostId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState({ title: '', content: '' });
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
 
     useEffect(() => {
         if (loadingRef.current) {
@@ -83,7 +133,6 @@ const User: FC = () => {
                 if (status === 404) {
                     setError(MESSAGES.userNotFound);
                     toast.error(MESSAGES.userNotFound);
-                    setTimeout(() => navigate(paths.root), 2000);
                 } else if (status === 403) {
                     setError(errorMsg);
                     toast.error(errorMsg);
@@ -101,9 +150,150 @@ const User: FC = () => {
         }
     };
 
+    const fetchPosts = async (page: number = 1) => {
+        if (!username) return;
+
+        try {
+            setPostsLoading(true);
+            const response = await api.get<PostsResponse>(apiEndpoints.public.userPosts(username), {
+                params: {
+                    page,
+                    limit: 10
+                }
+            });
+
+            if (response.data.success && response.data.data) {
+                setPosts(response.data.data);
+                setPagination(response.data.pagination);
+            } else {
+                const errorMsg = response.data.error || MESSAGES.internalServerError;
+                toast.error(errorMsg);
+            }
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                const errorMsg = err.response?.data?.error || MESSAGES.internalServerError;
+                toast.error(errorMsg);
+            } else {
+                toast.error(MESSAGES.internalServerError);
+            }
+        } finally {
+            setPostsLoading(false);
+        }
+    };
+
+    const handleCreatePost = async () => {
+        if (!createForm.title.trim() || !createForm.content.trim() || createForm.content === '<p></p>') {
+            toast.error('Vui lòng điền đầy đủ thông tin');
+            return;
+        }
+
+        try {
+            setIsCreating(true);
+            const response = await api.post<ApiResponse<Post>>(apiEndpoints.me.createPost, {
+                title: createForm.title.trim(),
+                content: createForm.content.trim()
+            });
+
+            if (response.data.success && response.data.data) {
+                setShowEditor(false);
+                setCreateForm({ title: '', content: '<p></p>' });
+                setCurrentPage(1);
+                await fetchPosts(1);
+            } else {
+                const errorMsg = response.data.error || MESSAGES.internalServerError;
+                toast.error(errorMsg);
+            }
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                const errorMsg = err.response?.data?.error || MESSAGES.internalServerError;
+                toast.error(errorMsg);
+            } else {
+                toast.error(MESSAGES.internalServerError);
+            }
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const handleEditPost = (post: Post) => {
+        setEditingPostId(post.id);
+        setEditForm({ title: post.title, content: post.content });
+    };
+
+    const handleUpdatePost = async () => {
+        if (!editingPostId) return;
+        if (!editForm.title.trim() || !editForm.content.trim() || editForm.content === '<p></p>') {
+            toast.error('Vui lòng điền đầy đủ thông tin');
+            return;
+        }
+
+        try {
+            setIsUpdating(true);
+            const response = await api.put<ApiResponse<Post>>(apiEndpoints.me.updatePost(editingPostId), {
+                title: editForm.title.trim(),
+                content: editForm.content.trim()
+            });
+
+            if (response.data.success) {
+                setEditingPostId(null);
+                setEditForm({ title: '', content: '' });
+                await fetchPosts(currentPage);
+            } else {
+                const errorMsg = response.data.error || MESSAGES.internalServerError;
+                toast.error(errorMsg);
+            }
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                const errorMsg = err.response?.data?.error || MESSAGES.internalServerError;
+                toast.error(errorMsg);
+            } else {
+                toast.error(MESSAGES.internalServerError);
+            }
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleDeletePost = async (postId: string) => {
+        if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return;
+
+        try {
+            setDeletingPostId(postId);
+            const response = await api.delete<ApiResponse<null>>(apiEndpoints.me.deletePost(postId));
+
+            if (response.data.success) {
+                await fetchPosts(currentPage);
+                toast.success('Đã xóa bài viết');
+            } else {
+                const errorMsg = response.data.error || MESSAGES.internalServerError;
+                toast.error(errorMsg);
+            }
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                const errorMsg = err.response?.data?.error || MESSAGES.internalServerError;
+                toast.error(errorMsg);
+            } else {
+                toast.error(MESSAGES.internalServerError);
+            }
+        } finally {
+            setDeletingPostId(null);
+        }
+    };
+
     useEffect(() => {
+        setUserData(null);
+        setError(null);
+        setCurrentPage(1);
+        setPosts([]);
+        setPagination(null);
         fetchUserProfile();
     }, [username]);
+
+    useEffect(() => {
+        if (userData && !error) {
+            fetchPosts(currentPage);
+        }
+    }, [currentPage, userData]);
 
     if (loading) {
         return (
@@ -141,6 +331,12 @@ const User: FC = () => {
             month: 'long',
             day: 'numeric'
         });
+    };
+
+    const extractTextFromHTML = (html: string): string => {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.textContent || div.innerText || '';
     };
 
     return (
@@ -210,8 +406,102 @@ const User: FC = () => {
                 </div>
 
                 <div className='rounded-lg border border-stone-200 bg-white p-4 shadow-lg dark:border-stone-700 dark:bg-stone-800'>
-                    <p className='mb-4 text-xl font-bold text-stone-900 dark:text-stone-100'>Bài viết</p>
-                    <div className='flex flex-col gap-4'></div>
+                    <div className='mb-4 flex items-center justify-between'>
+                        <p className='text-xl font-bold text-stone-900 dark:text-stone-100'>Bài viết</p>
+                        {isOwnProfile && !showEditor && (
+                            <Button
+                                onClick={() => {
+                                    setCreateForm({ title: '', content: '<p></p>' });
+                                    setShowEditor(true);
+                                }}
+                                className='flex items-center gap-2'
+                            >
+                                <FontAwesomeIcon icon={faPlus} />
+                                <span>Tạo bài viết</span>
+                            </Button>
+                        )}
+                    </div>
+                    {isOwnProfile && showEditor && (
+                        <div className='mb-6'>
+                            <Wysiwyg
+                                title={createForm.title}
+                                content={createForm.content || '<p></p>'}
+                                onTitleChange={(title) => setCreateForm((prev) => ({ ...prev, title }))}
+                                onContentChange={(content) => setCreateForm((prev) => ({ ...prev, content }))}
+                                onSubmit={handleCreatePost}
+                                onCancel={() => {
+                                    setShowEditor(false);
+                                    setCreateForm({ title: '', content: '<p></p>' });
+                                }}
+                                isSubmitting={isCreating}
+                            />
+                        </div>
+                    )}
+                    {postsLoading ? (
+                        <div className='flex items-center justify-center py-8'>
+                            <Lottie animationData={LoadingImage} loop={true} />
+                        </div>
+                    ) : posts.length === 0 ? (
+                        <p className='py-8 text-center text-stone-600 dark:text-stone-400'>Chưa có bài viết nào</p>
+                    ) : (
+                        <>
+                            <div className='flex flex-col gap-4'>
+                                {posts.map((post) => (
+                                    <div key={post.id} className='rounded-lg border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-900'>
+                                        {editingPostId === post.id ? (
+                                            <div className='mb-4'>
+                                                <Wysiwyg
+                                                    title={editForm.title}
+                                                    content={editForm.content || '<p></p>'}
+                                                    onTitleChange={(title) => setEditForm((prev) => ({ ...prev, title }))}
+                                                    onContentChange={(content) => setEditForm((prev) => ({ ...prev, content }))}
+                                                    onSubmit={handleUpdatePost}
+                                                    onCancel={() => {
+                                                        setEditingPostId(null);
+                                                        setEditForm({ title: '', content: '' });
+                                                    }}
+                                                    isSubmitting={isUpdating}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className='mb-3 flex items-start justify-between gap-3'>
+                                                    <div className='flex-1 cursor-pointer' onClick={() => navigate(paths.blogDetail.replace(':id', post.id))}>
+                                                        <p className='mb-2 text-lg font-semibold text-stone-900 dark:text-stone-100'>{post.title}</p>
+                                                        <p className='mb-3 line-clamp-2 text-sm text-stone-700 dark:text-stone-300'>{extractTextFromHTML(post.content)}</p>
+                                                    </div>
+                                                    {isOwnProfile && (
+                                                        <div className='flex shrink-0 gap-2' onClick={(e) => e.stopPropagation()}>
+                                                            <button type='button' onClick={() => handleEditPost(post)} className='rounded-lg p-2 text-stone-600 transition-colors hover:bg-stone-200 dark:text-stone-400 dark:hover:bg-stone-800' title='Sửa bài viết'>
+                                                                <FontAwesomeIcon icon={faPencilAlt} />
+                                                            </button>
+                                                            <button type='button' onClick={() => handleDeletePost(post.id)} disabled={deletingPostId === post.id} className='rounded-lg p-2 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600 disabled:opacity-50 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300' title='Xóa bài viết'>
+                                                                <FontAwesomeIcon icon={faTrash} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className='flex items-center justify-between text-xs text-stone-500 dark:text-stone-400'>
+                                                    <div className='flex items-center gap-4'>
+                                                        <span>{formatVietnamDate(post.created_at)}</span>
+                                                        <div className='flex items-center gap-1'>
+                                                            <FontAwesomeIcon icon={faComment} />
+                                                            <span>{post._count.comments}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            {pagination && pagination.totalPages > 1 && (
+                                <div className='mt-6 flex justify-center'>
+                                    <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))} onNextPage={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))} hasPrevPage={pagination.hasPrevPage} hasNextPage={pagination.hasNextPage} />
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </>

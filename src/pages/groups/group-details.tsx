@@ -1,5 +1,6 @@
 import LoadingImage from '@/assets/lottie/loading.json';
 import Button from '@/components/ui/button';
+import Dropdown, { DropdownItem } from '@/components/ui/drop-down';
 import Textarea from '@/components/ui/textarea';
 import apiEndpoints from '@/config/api-endpoints';
 import MESSAGES from '@/config/messages';
@@ -7,7 +8,7 @@ import paths from '@/config/paths';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/utils/api';
 import socketEvent from '@/utils/socket-event';
-import { faChevronLeft, faCrown, faPaperPlane, faReply, faRightFromBracket, faTimes, faUserPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faCrown, faEllipsisVertical, faPaperPlane, faReply, faRightFromBracket, faTimes, faTrash, faUserPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { isAxiosError } from 'axios';
 import Lottie from 'lottie-react';
@@ -311,6 +312,50 @@ const GroupDetails: FC = () => {
         }
     };
 
+    const handleKickMember = async (username: string) => {
+        if (!id || !group) return;
+
+        try {
+            setActionLoading(true);
+            const response = await api.post(apiEndpoints.me.groupKick(id), { username });
+
+            if (response.data.success) {
+                toast.success('Đã xóa thành viên khỏi nhóm');
+                fetchGroup();
+            }
+        } catch (err) {
+            if (isAxiosError(err)) {
+                toast.error(err.response?.data?.error || MESSAGES.internalServerError);
+            } else {
+                toast.error(MESSAGES.internalServerError);
+            }
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleTransferOwnership = async (username: string) => {
+        if (!id || !group) return;
+
+        try {
+            setActionLoading(true);
+            const response = await api.post(apiEndpoints.me.groupTransfer(id), { username });
+
+            if (response.data.success) {
+                toast.success('Đã chuyển quyền owner');
+                fetchGroup();
+            }
+        } catch (err) {
+            if (isAxiosError(err)) {
+                toast.error(err.response?.data?.error || MESSAGES.internalServerError);
+            } else {
+                toast.error(MESSAGES.internalServerError);
+            }
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const handleBack = () => {
         navigate(paths.groups);
     };
@@ -413,15 +458,33 @@ const GroupDetails: FC = () => {
                                 return (
                                     <div key={msg.id} id={`message-${msg.id}`} className={`flex px-2 py-1 transition-colors duration-500 ${isMe ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`flex max-w-[70%] gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                                            <div className='h-8 w-8 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700'>{msg.user.avatarUrl ? <img src={msg.user.avatarUrl} alt='' className='h-full w-full object-cover' /> : <div className='flex h-full w-full items-center justify-center text-xs font-bold text-stone-600 dark:text-stone-300'>{(msg.user.name || msg.user.username).charAt(0)}</div>}</div>
+                                            <button onClick={() => navigate(paths.profile.replace(':username', msg.user.username))} className='h-8 w-8 shrink-0 overflow-hidden rounded-full bg-stone-200 transition-opacity hover:opacity-80 dark:bg-stone-700'>
+                                                {msg.user.avatarUrl ? <img src={msg.user.avatarUrl} alt='' className='h-full w-full object-cover' /> : <div className='flex h-full w-full items-center justify-center text-xs font-bold text-stone-600 dark:text-stone-300'>{(msg.user.name || msg.user.username).charAt(0)}</div>}
+                                            </button>
                                             <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                                 <div className='mb-1 flex items-center gap-2'>
-                                                    <span className='text-xs font-medium text-stone-600 dark:text-stone-400'>{msg.user.name || msg.user.username}</span>
+                                                    <button onClick={() => navigate(paths.profile.replace(':username', msg.user.username))} className='text-xs font-medium text-stone-600 transition-colors hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100'>
+                                                        {msg.user.name || msg.user.username}
+                                                    </button>
                                                     <span className='text-[10px] text-stone-400'>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                                 {msg.replyTo && (
-                                                    <button onClick={() => scrollToMessage(msg.replyTo!.id)} className='mb-1 flex cursor-pointer flex-col rounded-md border-l-2 border-stone-300 bg-stone-100/50 px-2 py-1 text-xs dark:border-stone-600 dark:bg-stone-800/50'>
-                                                        <span className='font-bold text-stone-600 dark:text-stone-400'>{msg.replyTo.user.name || msg.replyTo.user.username}</span>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            scrollToMessage(msg.replyTo!.id);
+                                                        }}
+                                                        className='mb-1 flex cursor-pointer flex-col rounded-md border-l-2 border-stone-300 bg-stone-100/50 px-2 py-1 text-xs dark:border-stone-600 dark:bg-stone-800/50'
+                                                    >
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(paths.profile.replace(':username', msg.replyTo!.user.username));
+                                                            }}
+                                                            className='w-fit font-bold text-stone-600 transition-colors hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100'
+                                                        >
+                                                            {msg.replyTo.user.name || msg.replyTo.user.username}
+                                                        </button>
                                                         <span className='line-clamp-1 text-stone-500 dark:text-stone-500'>{msg.replyTo.content}</span>
                                                     </button>
                                                 )}
@@ -515,18 +578,38 @@ const GroupDetails: FC = () => {
 
                         <div className='flex-1 space-y-4 overflow-y-auto p-4'>
                             <div className='space-y-1'>
-                                {group.members.map((member) => (
-                                    <div key={member.user.username} className='flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-stone-100 dark:hover:bg-stone-700/50'>
-                                        <div className='relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700'>{member.user.profile?.avatar_url ? <img src={member.user.profile.avatar_url} alt='' className='h-full w-full object-cover' /> : <div className='flex h-full w-full items-center justify-center text-xs font-bold text-stone-600 dark:text-stone-300'>{(member.user.profile?.name || member.user.username).charAt(0)}</div>}</div>
-                                        <div className='flex flex-1 flex-col overflow-hidden'>
-                                            <div className='flex items-center gap-1.5'>
-                                                <span className='truncate text-sm font-medium text-stone-900 dark:text-stone-100'>{member.user.profile?.name || member.user.username}</span>
-                                                {member.role === 'OWNER' && <FontAwesomeIcon icon={faCrown} className='text-[10px] text-stone-500' />}
-                                            </div>
-                                            <span className='truncate text-xs text-stone-500 dark:text-stone-400'>@{member.user.username}</span>
+                                {group.members.map((member) => {
+                                    const isOwner = group.myRole === 'OWNER';
+                                    const isMe = member.user.username === user?.username;
+                                    const canManage = isOwner && !isMe;
+
+                                    return (
+                                        <div key={member.user.username} className='flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-stone-100 dark:hover:bg-stone-700/50'>
+                                            <button onClick={() => navigate(paths.profile.replace(':username', member.user.username))} className='flex flex-1 items-center gap-3 text-left'>
+                                                <div className='relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700'>{member.user.profile?.avatar_url ? <img src={member.user.profile.avatar_url} alt='' className='h-full w-full object-cover' /> : <div className='flex h-full w-full items-center justify-center text-xs font-bold text-stone-600 dark:text-stone-300'>{(member.user.profile?.name || member.user.username).charAt(0)}</div>}</div>
+                                                <div className='flex flex-1 flex-col overflow-hidden'>
+                                                    <div className='flex items-center gap-1.5'>
+                                                        <span className='truncate text-sm font-medium text-stone-900 dark:text-stone-100'>{member.user.profile?.name || member.user.username}</span>
+                                                        {member.role === 'OWNER' && <FontAwesomeIcon icon={faCrown} className='text-[10px] text-stone-500' />}
+                                                    </div>
+                                                    <span className='truncate text-xs text-stone-500 dark:text-stone-400'>@{member.user.username}</span>
+                                                </div>
+                                            </button>
+                                            {canManage && (
+                                                <Dropdown trigger={<FontAwesomeIcon icon={faEllipsisVertical} className='text-stone-500 dark:text-stone-400' />} triggerVariant='ghost' triggerClassName='h-8 w-8 p-0 rounded-full' menuClassName='min-w-48 whitespace-nowrap'>
+                                                    <DropdownItem onClick={() => handleTransferOwnership(member.user.username)} className='flex items-center gap-2'>
+                                                        <FontAwesomeIcon icon={faCrown} className='text-stone-600 dark:text-stone-400' />
+                                                        <span>Chuyển quyền</span>
+                                                    </DropdownItem>
+                                                    <DropdownItem onClick={() => handleKickMember(member.user.username)} variant='danger' className='flex items-center gap-2'>
+                                                        <FontAwesomeIcon icon={faTrash} className='text-red-600 dark:text-red-400' />
+                                                        <span>Xóa</span>
+                                                    </DropdownItem>
+                                                </Dropdown>
+                                            )}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 
