@@ -8,13 +8,15 @@
         "@hono/zod-validator": "0.7.5",
         "@prisma/adapter-pg": "7.0.1",
         "@prisma/client": "7.0.1",
-        "prisma": "7.0.1",
+        "axios": "1.13.2",
         "bcrypt": "6.0.0",
         "dotenv": "17.2.3",
         "hono": "4.10.7",
         "mjml": "4.17.1",
+        "prisma": "7.0.1",
         "resend": "6.5.2",
         "socket.io": "4.8.1",
+        "uuid": "13.0.0",
         "zod": "4.1.13"
     },
     "devDependencies": {

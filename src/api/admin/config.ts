@@ -6,7 +6,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 const updateConfigSchema = z.object({
-    gemini_api: z.string().optional(),
+    zai_api: z.string().optional(),
     resend_api: z.string().optional()
 });
 
@@ -59,17 +59,17 @@ app.get('/', async (c) => {
 
 app.put('/', zValidator('json', updateConfigSchema), async (c) => {
     try {
-        const { gemini_api, resend_api } = c.req.valid('json');
+        const { zai_api, resend_api } = c.req.valid('json');
 
         const config = await prisma.config.upsert({
             where: { id: 'singleton' },
             update: {
-                gemini_api,
+                zai_api,
                 resend_api
             },
             create: {
                 id: 'singleton',
-                gemini_api,
+                zai_api,
                 resend_api
             }
         });
